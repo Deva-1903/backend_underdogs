@@ -22,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
+app.get("/", (req,res) => {res.status(200).send({message:"Server is up..."})});
 app.use("/api", require("./routes/homeRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
