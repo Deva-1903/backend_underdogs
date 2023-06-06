@@ -3,11 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const colors = require("colors");
 const dotenv = require("dotenv").config();
-const port = process.env.PORT;
-const connectDB = require("./config/db");
 const cron = require("node-cron");
-const { errorHandler } = require("./middleware/errorMiddleware");
-const User = require("./src/model/userModel");
+
+const connectDB = require("../config/db");
+
+const { errorHandler } = require("../src/middleware/errorMiddleware");
+const User = require("../model/userModel");
+
+const port = process.env.PORT;
 
 const app = express();
 
