@@ -7,7 +7,7 @@ const port = process.env.PORT;
 const connectDB = require("./config/db");
 const cron = require("node-cron");
 const { errorHandler } = require("./middleware/errorMiddleware");
-const User = require("./model/userModel");
+const User = require("./src/model/userModel");
 
 const app = express();
 

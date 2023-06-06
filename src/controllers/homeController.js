@@ -1,7 +1,8 @@
 const asyncHandler = require("express-async-handler");
-const Attendance = require("../model/attendaceModel");
-const User = require("../model/userModel");
-const ContactForm = require("../model/contactFormModel");
+const Attendance = require("../../model/attendaceModel");
+const User = require("../../model/userModel");
+const ContactForm = require("../../model/contactFormModel");
+const Brochure = require("../../model/brochureModel");
 
 const getUserDetails = asyncHandler(async (req, res) => {
   const id = req.query.id;
@@ -115,8 +116,6 @@ const getTodaysAttendances = asyncHandler(async (req, res) => {
 const postContactForm = asyncHandler(async (req, res) => {
   const { fullName, email, message } = req.body;
 
-  console.log(fullName, email, message);
-
   if (!fullName || !email || !message) {
     res.status(400);
     throw new Error("Please provide a full name, email, and message");
@@ -133,9 +132,19 @@ const postContactForm = asyncHandler(async (req, res) => {
   res.status(201).json(createdContactForm);
 });
 
+const getBrochureURL = asyncHandler(async (req, res) => {
+  try {
+    const brochure = await Brochure.find({});
+    res.json(brochure);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch brochures." });
+  }
+});
+
 module.exports = {
   addAttendance,
   getTodaysAttendances,
   getUserDetails,
   postContactForm,
+  getBrochureURL,
 };
