@@ -1,15 +1,15 @@
 const asyncHandler = require("express-async-handler");
-const Admin = require("../model/adminModel");
-const Attendance = require("../model/attendaceModel");
-const FeesDetails = require("../model/feesDetailsModel");
-const SubscriptionOption = require("../model/subscriptionOptionModel");
-const SubscriptionType = require("../model/subscriptionTypeModel");
-const Cardio = require("../model/cardioModel");
-const User = require("../model/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const ContactForm = require("../model/contactFormModel");
-const Brochure = require("../model/brochureModel");
+const Admin = require("../../model/adminModel");
+const Attendance = require("../../model/attendaceModel");
+const FeesDetails = require("../../model/feesDetailsModel");
+const SubscriptionOption = require("../../model/subscriptionOptionModel");
+const SubscriptionType = require("../../model/subscriptionTypeModel");
+const Cardio = require("../../model/cardioModel");
+const User = require("../../model/userModel");
+const ContactForm = require("../../model/contactFormModel");
+const Brochure = require("../../model/brochureModel");
 
 const registerAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
@@ -647,6 +647,19 @@ const updateBrochureURL = asyncHandler(async (req, res) => {
   }
 });
 
+const deleteContactForm = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const result = await ContactForm.deleteOne({ _id: id });
+
+  if (result.deletedCount === 0) {
+    res.status(404);
+    throw new Error("Contact form not found");
+  }
+
+  res.json({ message: "Contact form deleted successfully" });
+});
+
 // Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -680,4 +693,5 @@ module.exports = {
   getBrochureURL,
   updateBrochureURL,
   addBrochure,
+  deleteContactForm,
 };
