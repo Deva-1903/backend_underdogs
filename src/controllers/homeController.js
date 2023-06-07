@@ -46,19 +46,45 @@ const addAttendance = asyncHandler(async (req, res) => {
     // Check if the user exists in the database
     const user = await User.findOne({ id });
 
+    console.log(user);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the attendance for the user on the current date already exists
+    const currentHour = currentDate.getHours();
+
+    // Determine the session based on the current hour
+    let session;
+    if (currentHour >= 3 && currentHour <= 13) {
+      session = "morning";
+    } else if (currentHour >= 15 && currentHour <= 23) {
+      session = "evening";
+    } else {
+      return res.status(400).json({
+        message: "Attendance can only be added between 3am-1pm and 3pm-12am",
+      });
+    }
+
+    // Check if the user has already entered attendance for the current session
     const existingAttendance = await Attendance.findOne({
       user_id: user.id,
-      date: currentDate.toLocaleDateString("en-GB"),
+      session,
+      $expr: {
+        $and: [
+          {
+            $eq: [
+              { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+              { $dateToString: { format: "%Y-%m-%d", date: currentDate } },
+            ],
+          },
+        ],
+      },
     });
 
     if (existingAttendance) {
-      return res.status(204).json({
-        message: "Attendance already added for this user on the current date",
+      return res.status(400).json({
+        message: `You have already entered attendance for the ${session} session`,
       });
     }
 
@@ -69,7 +95,8 @@ const addAttendance = asyncHandler(async (req, res) => {
       user_id: user.id,
       user_name: user.name,
       timeIn,
-      date: currentDate.toLocaleDateString("en-GB"),
+      date: currentDate,
+      session,
       status: user.status,
       planEnds: user.planEnds,
       subscription: user.subscription,
@@ -88,7 +115,6 @@ const addAttendance = asyncHandler(async (req, res) => {
       status: user.status,
       planEnds: user.planEnds,
       subscription: user.subscription,
-      planEnds: user.planEnds,
       cardio: user.cardio,
     });
   } catch (error) {

@@ -15,10 +15,7 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  date: {
-    type: String,
-    required: true,
-  },
+
   subscription: {
     ref: "User",
     type: String,
@@ -29,9 +26,17 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  session: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    required: true,
+  },
   planEnds: {
     ref: "User",
-    type: String,
+    type: Date,
   },
   status: {
     ref: "User",

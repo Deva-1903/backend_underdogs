@@ -101,6 +101,7 @@ const registerUser = asyncHandler(async (req, res) => {
     mode_of_payment,
     cardio,
     photoURL,
+    joiningDate,
     adminName,
   } = req.body;
 
@@ -130,6 +131,7 @@ const registerUser = asyncHandler(async (req, res) => {
     subscription_type,
     cardio,
     mode_of_payment,
+    joiningDate,
     photoURL,
   });
 
@@ -200,6 +202,7 @@ const getUserDetails = asyncHandler(async (req, res) => {
     subscription_type: user.subscription_type,
     cardio: user.cardio,
     status: user.status,
+    joiningDate: user.joiningDate,
     planEnds: user.planEnds,
     photoURL: user.photoURL,
   });
@@ -247,6 +250,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     subscription_type,
     cardio,
     mode_of_payment,
+    paymentDate,
     adminName,
   } = req.body;
 
@@ -255,7 +259,8 @@ const updateSubscription = asyncHandler(async (req, res) => {
     throw new Error("Subscription is required");
   }
 
-  const currentDate = new Date();
+  const currentDate = paymentDate ? new Date(paymentDate) : new Date();
+
   let planEnds = currentDate;
   let duration;
 
@@ -277,9 +282,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
       subscription_type,
       cardio,
       mode_of_payment,
-      planEnds: `${planEnds.getDate()}/${
-        planEnds.getMonth() + 1
-      }/${planEnds.getFullYear()}`,
+      planEnds,
       status: "active",
     },
     { new: true }
@@ -301,7 +304,15 @@ const updateSubscription = asyncHandler(async (req, res) => {
     transaction_type: "Fees Renewal",
   };
 
-  const createdFeesDetails = await FeesDetails.create(feesDetailsData);
+  const existingFeesDetails = await FeesDetails.findOneAndUpdate(
+    {
+      user_id: updatedUser.id,
+      transaction_type: "Fees Renewal",
+      created_at: { $gte: startOfDay(new Date()), $lt: endOfDay(new Date()) },
+    },
+    feesDetailsData,
+    { upsert: true, new: true }
+  );
 
   res.json({
     subscription: updatedUser.subscription,
@@ -390,11 +401,20 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
     const limit = 12;
 
     if (date) {
-      const newDate = new Date(date);
-      query.date = newDate.toLocaleDateString("en-GB");
+      // Remove the time portion from the provided date string
+      const searchDate = new Date(date).toISOString().split("T")[0];
+
+      // Set the query to compare only the date portion
+      query.date = {
+        $gte: searchDate,
+        $lt: new Date(new Date(searchDate).getTime() + 24 * 60 * 60 * 1000),
+      };
     } else {
-      const currentDate = new Date().toLocaleDateString("en-GB");
-      query.date = currentDate;
+      const currentDate = new Date();
+      query.date = {
+        $gte: currentDate,
+        $lt: new Date(currentDate.getTime() + 24 * 60 * 60 * 1000),
+      };
     }
 
     if (status === "active" || status === "inactive") {

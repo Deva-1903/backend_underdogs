@@ -63,10 +63,13 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-
-    planEnds: {
-      type: String,
+    joiningDate: {
+      type: Date,
     },
+    planEnds: {
+      type: Date,
+    },
+
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -82,9 +85,12 @@ const userSchema = mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (this.isNew) {
     const subscription = this.subscription;
-    const currentDate = new Date();
+    const currentDate = this.joiningDate
+      ? new Date(this.joiningDate)
+      : new Date();
 
     let duration;
+
     if (subscription.includes("year")) {
       duration = parseInt(subscription) * 12;
     } else if (subscription.includes("month")) {
@@ -94,9 +100,8 @@ userSchema.pre("save", async function (next) {
     }
 
     currentDate.setMonth(currentDate.getMonth() + duration);
-    const formattedDate = currentDate.toLocaleDateString("en-GB");
 
-    this.planEnds = formattedDate;
+    this.planEnds = currentDate;
 
     // Find the user with the highest ID
     const highestUser = await this.constructor.findOne().sort("-id");
