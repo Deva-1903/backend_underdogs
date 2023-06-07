@@ -304,11 +304,17 @@ const updateSubscription = asyncHandler(async (req, res) => {
     transaction_type: "Fees Renewal",
   };
 
+  const startOfCurrentDay = new Date();
+  startOfCurrentDay.setHours(0, 0, 0, 0);
+
+  const endOfCurrentDay = new Date();
+  endOfCurrentDay.setHours(23, 59, 59, 999);
+
   const existingFeesDetails = await FeesDetails.findOneAndUpdate(
     {
       user_id: updatedUser.id,
       transaction_type: "Fees Renewal",
-      created_at: { $gte: startOfDay(new Date()), $lt: endOfDay(new Date()) },
+      createdAt: { $gte: startOfCurrentDay, $lte: endOfCurrentDay },
     },
     feesDetailsData,
     { upsert: true, new: true }
