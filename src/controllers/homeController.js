@@ -46,8 +46,6 @@ const addAttendance = asyncHandler(async (req, res) => {
     // Check if the user exists in the database
     const user = await User.findOne({ id });
 
-    console.log(user);
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

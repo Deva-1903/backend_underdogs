@@ -33,15 +33,13 @@ app.listen(port, () => {
 
 // This function updates the status of users based on their planEnds date
 const updateStatus = async () => {
-  const currentDate = new Date().toLocaleDateString("en-GB");
+  const currentDate = new Date();
   const users = await User.find({ status: "active" });
 
   for (const user of users) {
-    const planEnds = new Date(
-      user.planEnds.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3")
-    );
+    const planEnds = new Date(user.planEnds);
 
-    if (planEnds.toLocaleDateString("en-GB") < currentDate) {
+    if (planEnds < currentDate) {
       user.status = "inactive";
       await user.save();
     }
@@ -55,6 +53,6 @@ cron.schedule(
     await updateStatus();
   },
   {
-    timezone: "Asia/Kolkata", // Change this to your timezone
+    timezone: "Asia/Kolkata",
   }
 );
