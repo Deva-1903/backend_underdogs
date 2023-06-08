@@ -54,7 +54,7 @@ const addAttendance = asyncHandler(async (req, res) => {
     const currentHour = currentDate.hours();
 
     let session;
-    if (currentHour >= 3 && currentHour <= 14) {
+    if (currentHour >= 4 && currentHour <= 13) {
       session = "morning";
     } else if (currentHour >= 15 && currentHour <= 23) {
       session = "evening";
