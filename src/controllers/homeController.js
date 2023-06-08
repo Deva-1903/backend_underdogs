@@ -3,6 +3,7 @@ const Attendance = require("../../model/attendaceModel");
 const User = require("../../model/userModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
+const moment = require("moment-timezone");
 
 const getUserDetails = asyncHandler(async (req, res) => {
   const id = req.query.id;
@@ -41,7 +42,7 @@ const getUserDetails = asyncHandler(async (req, res) => {
 const addAttendance = asyncHandler(async (req, res) => {
   try {
     const { id } = req.body;
-    const currentDate = new Date();
+    const currentDate = moment().tz("Asia/Kolkata");
 
     // Check if the user exists in the database
     const user = await User.findOne({ id });
@@ -50,9 +51,8 @@ const addAttendance = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const currentHour = currentDate.getHours();
+    const currentHour = currentDate.hours();
 
-    // Determine the session based on the current hour
     let session;
     if (currentHour >= 3 && currentHour <= 13) {
       session = "morning";
@@ -64,7 +64,6 @@ const addAttendance = asyncHandler(async (req, res) => {
       });
     }
 
-    // Check if the user has already entered attendance for the current session
     const existingAttendance = await Attendance.findOne({
       user_id: user.id,
       session,
@@ -73,7 +72,12 @@ const addAttendance = asyncHandler(async (req, res) => {
           {
             $eq: [
               { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-              { $dateToString: { format: "%Y-%m-%d", date: currentDate } },
+              {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: currentDate.toDate(),
+                },
+              },
             ],
           },
         ],
@@ -87,13 +91,12 @@ const addAttendance = asyncHandler(async (req, res) => {
     }
 
     // Create a new attendance object
-    const options = { hour12: true, hourCycle: "h12" };
-    const timeIn = currentDate.toLocaleTimeString("en-IN", options);
+    const timeIn = currentDate.format("h:mm:ss a");
     const attendance = new Attendance({
       user_id: user.id,
       user_name: user.name,
       timeIn,
-      date: currentDate,
+      date: currentDate.toDate(),
       session,
       status: user.status,
       planEnds: user.planEnds,
