@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema({
+  number: {
+    type: Number,
+    required: true,
+  },
   user_id: {
     type: Number,
     ref: "User",
@@ -45,7 +49,7 @@ const attendanceSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: "90d",
+    expires: "200d",
   },
 });
 

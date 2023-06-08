@@ -8,6 +8,9 @@ const cron = require("node-cron");
 const connectDB = require("../config/db");
 
 const { errorHandler } = require("../src/middleware/errorMiddleware");
+const {
+  resetCountersAtMidnight,
+} = require("../src/controllers/homeController");
 const User = require("../model/userModel");
 
 const port = process.env.PORT;
@@ -51,6 +54,7 @@ cron.schedule(
   "0 0 * * *",
   async () => {
     await updateStatus();
+    resetCountersAtMidnight();
   },
   {
     timezone: "Asia/Kolkata",

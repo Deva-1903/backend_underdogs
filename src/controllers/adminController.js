@@ -404,7 +404,7 @@ const updateUser = asyncHandler(async (req, res) => {
 const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
     let query = {};
-    const { date, status, page = 1 } = req.query;
+    const { date, status, session, page = 1 } = req.query;
     const limit = 12;
 
     if (date) {
@@ -425,6 +425,10 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
 
     if (status === "active" || status === "inactive") {
       query.status = status;
+    }
+
+    if (session === "morning" || session === "evening") {
+      query.session = session;
     }
 
     const startIndex = (page - 1) * limit;
