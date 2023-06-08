@@ -5,6 +5,10 @@ const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
 const moment = require("moment-timezone");
 
+// Define counters for morning and evening sessions
+let morningCounter = 0;
+let eveningCounter = 0;
+
 const getUserDetails = asyncHandler(async (req, res) => {
   const id = req.query.id;
   const email = req.query.email;
@@ -90,9 +94,17 @@ const addAttendance = asyncHandler(async (req, res) => {
       });
     }
 
+    let counter;
+    if (session === "morning") {
+      counter = ++morningCounter;
+    } else if (session === "evening") {
+      counter = ++eveningCounter;
+    }
+
     // Create a new attendance object
     const timeIn = currentDate.format("h:mm:ss a");
     const attendance = new Attendance({
+      number: counter,
       user_id: user.id,
       user_name: user.name,
       timeIn,
@@ -109,6 +121,7 @@ const addAttendance = asyncHandler(async (req, res) => {
 
     // Return the user's details along with the attendance details
     res.json({
+      number: attendance.number,
       user_id: user.id,
       user: user.name,
       timeIn,
@@ -152,10 +165,15 @@ const getBrochureURL = asyncHandler(async (req, res) => {
   }
 });
 
+const resetCountersAtMidnight = () => {
+  morningCounter = 0;
+  eveningCounter = 0;
+};
+
 module.exports = {
   addAttendance,
-
   getUserDetails,
   postContactForm,
   getBrochureURL,
+  resetCountersAtMidnight,
 };

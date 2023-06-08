@@ -404,7 +404,7 @@ const updateUser = asyncHandler(async (req, res) => {
 const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
     let query = {};
-    const { date, status, page = 1 } = req.query;
+    const { date, status, session, page = 1 } = req.query;
     const limit = 12;
 
     if (date) {
@@ -425,6 +425,10 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
 
     if (status === "active" || status === "inactive") {
       query.status = status;
+    }
+
+    if (session === "morning" || session === "evening") {
+      query.session = session;
     }
 
     const startIndex = (page - 1) * limit;
@@ -532,16 +536,16 @@ const getSubscriptionOptions = asyncHandler(async (req, res) => {
 const addSubscriptionOption = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
-  // Validate the name format using a regular expression
-  const regex = /^\d+\s+(month|months)$/;
-  if (!regex.test(name)) {
+  const number = parseInt(name);
+  if (isNaN(number) || number <= 0) {
     return res.status(400).json({
-      error:
-        "Invalid subscription option format. Please use the format: <number> month(s).",
+      error: "Invalid subscription option. Please enter a positive number.",
     });
   }
 
-  SubscriptionOption.create({ name })
+  const optionName = `${name} ${name === "1" ? "month" : "months"}`;
+
+  SubscriptionOption.create({ name: optionName })
     .then((newOption) => {
       res.status(201).json(newOption);
     })
