@@ -88,7 +88,7 @@ const addAttendance = asyncHandler(async (req, res) => {
 
     // Create a new attendance object
     const options = { hour12: true, hourCycle: "h12" };
-    const timeIn = currentDate.toLocaleTimeString("en-GB", options);
+    const timeIn = currentDate.toLocaleTimeString("en-IN", options);
     const attendance = new Attendance({
       user_id: user.id,
       user_name: user.name,
