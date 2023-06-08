@@ -450,19 +450,19 @@ const getFeesDetails = asyncHandler(async (req, res) => {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      if (start.toDateString() === end.toDateString()) {
-        // If the start and end date are the same, adjust the query for that specific date
-        const startDate = new Date(start.toDateString());
-        const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000); // Add 1 day to include data until the end of the day
+      // Set the time to start and end of the day for the given dates
+      start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
 
+      if (start.toDateString() === end.toDateString()) {
         query.createdAt = {
-          $gte: startDate,
-          $lt: endDate,
+          $gte: start,
+          $lte: end,
         };
       } else {
         query.createdAt = {
           $gte: start,
-          $lte: end,
+          $lt: end,
         };
       }
     }
