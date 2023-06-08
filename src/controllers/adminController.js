@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
+const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const Admin = require("../../model/adminModel");
 const Attendance = require("../../model/attendaceModel");
@@ -407,19 +408,18 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
     const limit = 12;
 
     if (date) {
-      // Remove the time portion from the provided date string
-      const searchDate = new Date(date).toISOString().split("T")[0];
+      const searchDate = moment.utc(date).local().startOf("day");
 
-      // Set the query to compare only the date portion
       query.date = {
-        $gte: searchDate,
-        $lt: new Date(new Date(searchDate).getTime() + 24 * 60 * 60 * 1000),
+        $gte: searchDate.toDate(),
+        $lt: searchDate.clone().endOf("day").toDate(),
       };
     } else {
-      const currentDate = new Date();
+      const currentDate = moment().utc().startOf("day");
+
       query.date = {
-        $gte: currentDate,
-        $lt: new Date(currentDate.getTime() + 24 * 60 * 60 * 1000),
+        $gte: currentDate.toDate(),
+        $lt: currentDate.clone().endOf("day").toDate(),
       };
     }
 
@@ -447,24 +447,17 @@ const getFeesDetails = asyncHandler(async (req, res) => {
     const limit = 12;
 
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      const start = moment
+        .utc(startDate)
+        .utcOffset("+05:30")
+        .startOf("day")
+        .toDate();
+      const end = moment.utc(endDate).utcOffset("+05:30").endOf("day").toDate();
 
-      // Set the time to start and end of the day for the given dates
-      start.setUTCHours(0, 0, 0, 0);
-      end.setUTCHours(23, 59, 59, 999);
-
-      if (start.toDateString() === end.toDateString()) {
-        query.createdAt = {
-          $gte: start,
-          $lte: end,
-        };
-      } else {
-        query.createdAt = {
-          $gte: start,
-          $lt: end,
-        };
-      }
+      query.createdAt = {
+        $gte: start,
+        $lte: end,
+      };
     }
 
     if (admin && admin !== "all") {

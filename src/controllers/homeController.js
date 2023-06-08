@@ -124,22 +124,6 @@ const addAttendance = asyncHandler(async (req, res) => {
   }
 });
 
-const getTodaysAttendances = asyncHandler(async (req, res) => {
-  try {
-    // Get the date parameter from the request
-    const currentDate = new Date().toLocaleDateString("en-GB");
-
-    // Find all attendances for the given date
-    const attendances = await Attendance.find({ date: currentDate });
-
-    // Return the attendances for the given date
-    res.json(attendances);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 const postContactForm = asyncHandler(async (req, res) => {
   const { fullName, email, message } = req.body;
 
@@ -170,7 +154,7 @@ const getBrochureURL = asyncHandler(async (req, res) => {
 
 module.exports = {
   addAttendance,
-  getTodaysAttendances,
+
   getUserDetails,
   postContactForm,
   getBrochureURL,
