@@ -54,13 +54,13 @@ const addAttendance = asyncHandler(async (req, res) => {
     const currentHour = currentDate.hours();
 
     let session;
-    if (currentHour >= 3 && currentHour <= 13) {
+    if (currentHour >= 3 && currentHour <= 14) {
       session = "morning";
-    } else if (currentHour >= 15 && currentHour <= 23) {
+    } else if (currentHour >= 15 && currentHour <= 1) {
       session = "evening";
     } else {
       return res.status(400).json({
-        message: "Attendance can only be added between 3am-1pm and 3pm-12am",
+        message: "Attendance can only be added between 3am-2pm and 3pm-1am",
       });
     }
 
