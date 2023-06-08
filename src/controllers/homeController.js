@@ -68,23 +68,13 @@ const addAttendance = asyncHandler(async (req, res) => {
       });
     }
 
+    const searchDate = moment().tz("Asia/Kolkata").startOf("day");
     const existingAttendance = await Attendance.findOne({
       user_id: user.id,
       session,
-      $expr: {
-        $and: [
-          {
-            $eq: [
-              { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-              {
-                $dateToString: {
-                  format: "%Y-%m-%d",
-                  date: currentDate.toDate(),
-                },
-              },
-            ],
-          },
-        ],
+      date: {
+        $gte: searchDate.toDate(),
+        $lt: searchDate.clone().endOf("day").toDate(),
       },
     });
 

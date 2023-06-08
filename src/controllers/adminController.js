@@ -408,18 +408,18 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
     const limit = 12;
 
     if (date) {
-      const searchDate = moment.utc(date).local().startOf("day");
+      const searchDate = moment.utc(date).utcOffset("+05:30").startOf("day");
 
       query.date = {
         $gte: searchDate.toDate(),
-        $lt: searchDate.clone().endOf("day").toDate(),
+        $lt: searchDate.clone().add(1, "day").toDate(),
       };
     } else {
-      const currentDate = moment().utc().startOf("day");
+      const currentDate = moment().utcOffset("+05:30").startOf("day");
 
       query.date = {
         $gte: currentDate.toDate(),
-        $lt: currentDate.clone().endOf("day").toDate(),
+        $lt: currentDate.clone().add(1, "day").toDate(),
       };
     }
 
@@ -536,6 +536,7 @@ const getSubscriptionOptions = asyncHandler(async (req, res) => {
 const addSubscriptionOption = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
+  // Validate that the input value is a positive number
   const number = parseInt(name);
   if (isNaN(number) || number <= 0) {
     return res.status(400).json({
