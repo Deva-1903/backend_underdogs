@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const {
   addAttendance,
-  getTodaysAttendances,
   getUserDetails,
   postContactForm,
   getBrochureURL,
@@ -12,7 +11,7 @@ const {
 router.route("/users").get(getUserDetails);
 
 // Attendance routes
-router.route("/attendance").get(getTodaysAttendances).post(addAttendance);
+router.route("/attendance").post(addAttendance);
 
 // Contact form route
 router.route("/contact-form").post(postContactForm);
