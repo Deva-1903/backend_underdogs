@@ -53,8 +53,6 @@ const addAttendance = asyncHandler(async (req, res) => {
 
     const currentHour = currentDate.hours();
 
-    console.log(currentHour);
-
     let session;
     if (currentHour >= 3 && currentHour <= 14) {
       session = "morning";
