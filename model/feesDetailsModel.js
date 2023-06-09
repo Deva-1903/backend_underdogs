@@ -41,6 +41,9 @@ const feesDetailsSchema = mongoose.Schema(
       enum: ["New User", "Fees Renewal"],
       required: true,
     },
+    amount: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );

@@ -103,6 +103,9 @@ const registerUser = asyncHandler(async (req, res) => {
     cardio,
     photoURL,
     joiningDate,
+    occupation,
+    feesAmount,
+    registrationFees,
     adminName,
   } = req.body;
 
@@ -133,8 +136,13 @@ const registerUser = asyncHandler(async (req, res) => {
     cardio,
     mode_of_payment,
     joiningDate,
+    occupation,
+    feesAmount,
+    registrationFees,
     photoURL,
   });
+
+  const amount = parseInt(feesAmount) + parseInt(registrationFees);
 
   const feesDetailsData = {
     user_id: user.id,
@@ -144,6 +152,7 @@ const registerUser = asyncHandler(async (req, res) => {
     cardio,
     mode_of_payment,
     admin: adminName,
+    amount,
     transaction_type: "New User",
   };
 
@@ -252,6 +261,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     cardio,
     mode_of_payment,
     paymentDate,
+    feesAmount,
     adminName,
   } = req.body;
 
@@ -284,6 +294,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
       cardio,
       mode_of_payment,
       planEnds,
+      feesAmount,
       status: "active",
     },
     { new: true }
@@ -300,6 +311,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     subscription: updatedUser.subscription,
     subscription_type: updatedUser.subscription_type,
     cardio: updatedUser.cardio,
+    amount: updatedUser.feesAmount,
     mode_of_payment,
     admin: adminName,
     transaction_type: "Fees Renewal",
