@@ -11,6 +11,7 @@ const Cardio = require("../../model/cardioModel");
 const User = require("../../model/userModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
+const Price = require("../../model/priceModel");
 
 const registerAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
@@ -215,6 +216,7 @@ const getUserDetails = asyncHandler(async (req, res) => {
     joiningDate: user.joiningDate,
     planEnds: user.planEnds,
     photoURL: user.photoURL,
+    occupation: user.occupation,
   });
 });
 
@@ -367,6 +369,7 @@ const updateUser = asyncHandler(async (req, res) => {
     bloodGroup,
     address,
     photoURL,
+    occupation,
   } = req.body;
 
   // Create a new object with the existing user properties
@@ -387,6 +390,7 @@ const updateUser = asyncHandler(async (req, res) => {
   if (bloodGroup) updatedUser.bloodGroup = bloodGroup;
   if (address) updatedUser.address = address;
   if (photoURL) updatedUser.photoURL = photoURL;
+  if (occupation) updatedUser.occupation = occupation;
 
   // Save the updated user object to the database
   user = await User.findOneAndUpdate({ id }, updatedUser, { new: true });
@@ -697,6 +701,42 @@ const deleteContactForm = asyncHandler(async (req, res) => {
   res.json({ message: "Contact form deleted successfully" });
 });
 
+// Get all prices
+const getAllPrices = async (req, res) => {
+  try {
+    const prices = await Price.find();
+    res.json(prices);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Add a new price
+const addPrice = async (req, res) => {
+  try {
+    const { price } = req.body;
+
+    const newPrice = await Price.create({ price });
+
+    res.status(201).json(newPrice);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Delete a price
+const deletePrice = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await Price.findByIdAndRemove(id);
+
+    res.json({ message: "Price deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -731,4 +771,7 @@ module.exports = {
   updateBrochureURL,
   addBrochure,
   deleteContactForm,
+  getAllPrices,
+  addPrice,
+  deletePrice,
 };

@@ -27,6 +27,9 @@ const {
   updateBrochureURL,
   addBrochure,
   deleteContactForm,
+  getAllPrices,
+  addPrice,
+  deletePrice,
 } = require("../controllers/adminController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -92,5 +95,9 @@ router
 router.route("/brochure/:id").put(protect, updateBrochureURL);
 
 router.route("/contact-form/:id").delete(protect, deleteContactForm);
+
+router.route("/prices").get(protect, getAllPrices).post(protect, addPrice);
+
+router.delete("/prices/:id", deletePrice);
 
 module.exports = router;
