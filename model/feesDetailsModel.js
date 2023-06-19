@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const feesDetailsSchema = mongoose.Schema(
   {
+    invoice_id: {
+      type: String,
+      required: true,
+    },
     user_id: {
       type: Number,
       ref: "User",

@@ -12,6 +12,23 @@ const User = require("../../model/userModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
 const Price = require("../../model/priceModel");
+const sgMail = require("@sendgrid/mail");
+const fs = require("fs");
+const multer = require("multer");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Create the multer upload middleware
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./uploads");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage }).single("attachment");
 
 const registerAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
@@ -145,7 +162,29 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const amount = parseInt(feesAmount) + parseInt(registrationFees);
 
+  const generateInvoiceID = () => {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+
+    let invoiceID = "";
+
+    for (let i = 0; i < 4; i++) {
+      if (i % 2 === 0) {
+        const randomCharIndex = Math.floor(Math.random() * characters.length);
+        invoiceID += characters.charAt(randomCharIndex);
+      } else {
+        const randomNumIndex = Math.floor(Math.random() * numbers.length);
+        invoiceID += numbers.charAt(randomNumIndex);
+      }
+    }
+
+    return invoiceID;
+  };
+
+  const invoiceID = generateInvoiceID();
+
   const feesDetailsData = {
+    invoice_id: invoiceID,
     user_id: user.id,
     user_name: user.name,
     subscription,
@@ -164,8 +203,16 @@ const registerUser = asyncHandler(async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      mobile: user.mobile,
       subscription: user.subscription,
       subscription_type: user.subscription_type,
+      cardio: user.cardio,
+      mode_of_payment: user.mode_of_payment,
+      registrationFees: user.registrationFees,
+      feesAmount: user.feesAmount,
+      transaction_type: feesDetailsData.transaction_type,
+      planEnds: user.planEnds,
+      invoice_id: feesDetailsData.invoice_id,
     });
   } else {
     res.status(400);
@@ -307,7 +354,29 @@ const updateSubscription = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  const generateInvoiceID = () => {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+
+    let invoiceID = "";
+
+    for (let i = 0; i < 4; i++) {
+      if (i % 2 === 0) {
+        const randomCharIndex = Math.floor(Math.random() * characters.length);
+        invoiceID += characters.charAt(randomCharIndex);
+      } else {
+        const randomNumIndex = Math.floor(Math.random() * numbers.length);
+        invoiceID += numbers.charAt(randomNumIndex);
+      }
+    }
+
+    return invoiceID;
+  };
+
+  const invoiceID = generateInvoiceID();
+
   const feesDetailsData = {
+    invoice_id: invoiceID,
     user_id: updatedUser.id,
     user_name: updatedUser.name,
     subscription: updatedUser.subscription,
@@ -336,11 +405,20 @@ const updateSubscription = asyncHandler(async (req, res) => {
   );
 
   res.json({
+    id: updatedUser.id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    mobile: updatedUser.mobile,
+    mode_of_payment: updatedUser.mode_of_payment,
     subscription: updatedUser.subscription,
     subscription_type: updatedUser.subscription_type,
     cardio: updatedUser.cardio,
     planEnds: updatedUser.planEnds,
     status: updatedUser.status,
+    invoice_id: feesDetailsData.invoice_id,
+    planEnds: updatedUser.planEnds,
+    transaction_type: feesDetailsData.transaction_type,
+    feesAmount: updatedUser.feesAmount,
   });
 });
 
@@ -701,7 +779,6 @@ const deleteContactForm = asyncHandler(async (req, res) => {
   res.json({ message: "Contact form deleted successfully" });
 });
 
-// Get all prices
 const getAllPrices = async (req, res) => {
   try {
     const prices = await Price.find();
@@ -711,7 +788,6 @@ const getAllPrices = async (req, res) => {
   }
 };
 
-// Add a new price
 const addPrice = async (req, res) => {
   try {
     const { price } = req.body;
@@ -734,6 +810,105 @@ const deletePrice = async (req, res) => {
     res.json({ message: "Price deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const sendInvoice = async (req, res) => {
+  try {
+    upload(req, res, async (err) => {
+      if (err) {
+        console.error("Error uploading file:", err);
+        res.status(500).json({ message: "Failed to upload file." });
+        return;
+      }
+
+      const { email, action, invoice_id, user_name } = req.body;
+      const attachment = req.file;
+
+      let subject = "";
+      let text = "";
+
+      if (action === "register") {
+        subject = `Welcome to UnderDogs Fitness Club - Invoice ${invoice_id}`;
+        text = `
+Dear ${user_name},
+
+Thank you for registering at UnderDogs Fitness Club! We are thrilled to have you as a new member. Attached is the invoice for your membership. If you have any questions or need assistance, please don't hesitate to reach out to our friendly team.
+
+We look forward to seeing you at our gym soon!
+
+Best regards,
+UnderDogs Fitness Club Team      `;
+      } else if (action === "updateSubscription") {
+        subject = `UnderDogs Fitness Club Subscription Update - Invoice ${invoice_id}`;
+        text = `
+Dear ${user_name},
+
+We are excited to inform you that your gym subscription at UnderDogs Fitness Club has been updated. Attached is the updated invoice reflecting the changes. If you have any questions regarding your subscription or need further assistance, please feel free to contact our support team.
+
+Thank you for choosing UnderDogs Fitness Club as your fitness partner!
+
+Best regards,
+UnderDogs Fitness Club Team
+        `;
+      } else {
+        subject = `Invoice ${invoice_id}`;
+        text = `
+Dear ${user_name},
+
+We hope this email finds you well. Please find attached the invoice for your recent transaction/action. If you require any clarification or have any concerns, don't hesitate to reach out to us. We appreciate your continued support.
+
+Thank you,
+UnderDogs Fitness Club Team
+        `;
+      }
+
+      const attachmentData = await new Promise((resolve, reject) => {
+        fs.readFile(attachment.path, (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        });
+      });
+
+      const attachmentName = attachment.originalname;
+      const attachmentType = attachment.mimetype;
+
+      const message = {
+        to: "devaags999@gmail.com",
+        from: "underdogsfitnessclub@gmail.com",
+        subject: subject,
+        text: text,
+        attachments: [
+          {
+            content: attachmentData.toString("base64"),
+            filename: attachmentName,
+            type: attachmentType,
+            disposition: "attachment",
+          },
+        ],
+      };
+
+      try {
+        await sgMail.send(message);
+        res.json({ message: "Invoice sent successfully!" });
+
+        // Delete the file from the uploads folder
+        fs.unlink(attachment.path, (err) => {
+          if (err) {
+            console.error("Error deleting file:", err);
+          }
+        });
+      } catch (error) {
+        console.error("Error sending invoice:", error);
+        res.status(500).json({ message: "Failed to send invoice." });
+      }
+    });
+  } catch (error) {
+    console.error('Error importing "formidable":', error);
+    res.status(500).json({ message: "Failed to process the form data." });
   }
 };
 
@@ -774,4 +949,5 @@ module.exports = {
   getAllPrices,
   addPrice,
   deletePrice,
+  sendInvoice,
 };
