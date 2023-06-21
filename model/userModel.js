@@ -69,7 +69,15 @@ const userSchema = mongoose.Schema(
     planEnds: {
       type: Date,
     },
-
+    occupation: {
+      type: String,
+    },
+    feesAmount: {
+      type: Number,
+    },
+    registrationFees: {
+      type: Number,
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const feesDetailsSchema = mongoose.Schema(
   {
+    invoice_id: {
+      type: String,
+      required: true,
+    },
     user_id: {
       type: Number,
       ref: "User",
@@ -40,6 +44,9 @@ const feesDetailsSchema = mongoose.Schema(
       type: String,
       enum: ["New User", "Fees Renewal"],
       required: true,
+    },
+    amount: {
+      type: Number,
     },
   },
   { timestamps: true }
