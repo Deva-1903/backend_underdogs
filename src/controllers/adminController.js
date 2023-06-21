@@ -166,7 +166,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const numbers = "0123456789";
 
-    let invoiceID = "";
+    let invoiceID = "#";
 
     for (let i = 0; i < 4; i++) {
       if (i % 2 === 0) {
@@ -358,7 +358,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const numbers = "0123456789";
 
-    let invoiceID = "";
+    let invoiceID = "#";
 
     for (let i = 0; i < 4; i++) {
       if (i % 2 === 0) {
@@ -837,19 +837,25 @@ Thank you for registering at UnderDogs Fitness Club! We are thrilled to have you
 
 We look forward to seeing you at our gym soon!
 
+Website: https://www.underdogsfitness.in/
+Contact/WhatsApp: +91 91235 25358 / +91 63822 32050
+
 Best regards,
-UnderDogs Fitness Club Team      `;
+UnderDogs Fitness Club      `;
       } else if (action === "updateSubscription") {
         subject = `UnderDogs Fitness Club Subscription Update - Invoice ${invoice_id}`;
         text = `
 Dear ${user_name},
 
-We are excited to inform you that your gym subscription at UnderDogs Fitness Club has been updated. Attached is the updated invoice reflecting the changes. If you have any questions regarding your subscription or need further assistance, please feel free to contact our support team.
+We are excited to inform you that your gym subscription at UnderDogs Fitness Club has been updated. Attached is the updated invoice reflecting the changes. If you have any questions regarding your subscription or need further assistance, please feel free to contact our team.
 
 Thank you for choosing UnderDogs Fitness Club as your fitness partner!
 
+Website: https://www.underdogsfitness.in/
+Contact/WhatsApp: +91 91235 25358 / +91 63822 32050
+
 Best regards,
-UnderDogs Fitness Club Team
+UnderDogs Fitness Club
         `;
       } else {
         subject = `Invoice ${invoice_id}`;
@@ -858,8 +864,11 @@ Dear ${user_name},
 
 We hope this email finds you well. Please find attached the invoice for your recent transaction/action. If you require any clarification or have any concerns, don't hesitate to reach out to us. We appreciate your continued support.
 
+Website: https://www.underdogsfitness.in/
+Contact/WhatsApp: +91 91235 25358 / +91 63822 32050
+
 Thank you,
-UnderDogs Fitness Club Team
+UnderDogs Fitness Club
         `;
       }
 
