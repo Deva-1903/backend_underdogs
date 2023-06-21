@@ -492,6 +492,7 @@ const updateUser = asyncHandler(async (req, res) => {
     planEnds: user.planEnds,
     status: user.status,
     photoURL: user.photoURL,
+    occupation: user.occupation,
   });
 });
 
