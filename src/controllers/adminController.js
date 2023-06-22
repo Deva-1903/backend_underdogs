@@ -782,7 +782,7 @@ const deleteContactForm = asyncHandler(async (req, res) => {
 
 const getAllPrices = async (req, res) => {
   try {
-    const prices = await Price.find();
+    const prices = await Price.find().sort({ price: 1 });
     res.json(prices);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
