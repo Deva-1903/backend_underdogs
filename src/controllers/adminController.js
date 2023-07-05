@@ -234,6 +234,7 @@ const registerUser = asyncHandler(async (req, res) => {
       transaction_type: feesDetailsData.transaction_type,
       planEnds: user.planEnds,
       invoice_id: feesDetailsData.invoice_id,
+      pending_amount: pendingAmount || 0,
     });
   } else {
     res.status(400);
@@ -460,6 +461,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     planEnds: updatedUser.planEnds,
     transaction_type: feesDetailsData.transaction_type,
     feesAmount: updatedUser.feesAmount,
+    pending_amount: pendingAmount || 0,
   });
 });
 
@@ -1009,19 +1011,19 @@ const getPendingFees = asyncHandler(async (req, res) => {
 
 const updatePendingFees = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const { amount, mode_of_payment, adminName } = req.body;
+  const { amount, payment_mode, adminName } = req.body;
 
   try {
     let user = await User.findOne({ id });
 
     if (!user) {
-      return next(new Error("User not found"));
+      return res.status(404).json({ error: "User not found" });
     }
 
     const pendingFee = await PendingFees.findOne({ userId: id });
 
     if (!pendingFee) {
-      return next(new Error("Pending fees not found"));
+      return res.status(404).json({ error: "Pending fees not found" });
     }
 
     const { pendingAmount, paymentStatus } = pendingFee;
@@ -1039,7 +1041,7 @@ const updatePendingFees = asyncHandler(async (req, res, next) => {
         subscription: user.subscription,
         subscription_type: user.subscription_type,
         cardio: user.cardio,
-        mode_of_payment,
+        mode_of_payment: payment_mode,
         admin: adminName,
         amount,
         transaction_type: "Pending fees",
@@ -1048,7 +1050,7 @@ const updatePendingFees = asyncHandler(async (req, res, next) => {
 
       const createdFeesDetails = await FeesDetails.create(feesDetailsData);
 
-      return res.json({
+      return res.status(200).json({
         message: "Payment completed successfully",
         pendingAmount: pendingFee.pendingAmount,
       });
@@ -1064,7 +1066,7 @@ const updatePendingFees = asyncHandler(async (req, res, next) => {
         subscription: user.subscription,
         subscription_type: user.subscription_type,
         cardio: user.cardio,
-        mode_of_payment,
+        mode_of_payment: payment_mode,
         admin: adminName,
         amount,
         transaction_type: "Pending fees",
@@ -1073,12 +1075,12 @@ const updatePendingFees = asyncHandler(async (req, res, next) => {
 
       const createdFeesDetails = await FeesDetails.create(feesDetailsData);
 
-      return res.json({
+      return res.status(200).json({
         message: "Partial payment made successfully",
         pendingAmount: pendingFee.pendingAmount,
       });
     } else {
-      return next(new Error("Invalid payment amount"));
+      return res.status(400).json({ error: "Invalid payment amount" });
     }
   } catch (error) {
     return next(error);

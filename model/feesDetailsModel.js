@@ -41,7 +41,7 @@ const feesDetailsSchema = mongoose.Schema(
     },
     transaction_type: {
       type: String,
-      enum: ["New User", "Fees Renewal"],
+      enum: ["New User", "Fees Renewal", "Pending fees"],
       required: true,
     },
     amount: {
