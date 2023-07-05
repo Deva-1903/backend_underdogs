@@ -12,6 +12,7 @@ const {
   resetCountersAtMidnight,
 } = require("../src/controllers/homeController");
 const User = require("../model/userModel");
+const PendingFees = require("../model/pendingFeesModel");
 
 const port = process.env.PORT;
 
@@ -40,6 +41,19 @@ app.listen(port, () => {
 // This function updates the status of users based on their planEnds date
 const updateStatus = async () => {
   const currentDate = new Date();
+
+  const tenDaysAgo = new Date();
+  tenDaysAgo.setDate(currentDate.getDate() - 10);
+
+  const pendingFeesToDelete = await PendingFees.find({
+    paymentStatus: "paid",
+    createdAt: { $lt: tenDaysAgo },
+  });
+
+  for (const pendingFee of pendingFeesToDelete) {
+    await pendingFee.remove();
+  }
+
   const users = await User.find({ status: "active" });
 
   for (const user of users) {

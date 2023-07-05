@@ -31,6 +31,9 @@ const {
   addPrice,
   deletePrice,
   sendInvoice,
+  getUserPendingFee,
+  getPendingFees,
+  updatePendingFees,
 } = require("../controllers/adminController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -102,5 +105,12 @@ router.route("/prices").get(protect, getAllPrices).post(protect, addPrice);
 router.delete("/prices/:id", deletePrice);
 
 router.route("/send-invoice").post(protect, sendInvoice);
+
+router.route("/pending-fees").get(protect, getPendingFees);
+
+router
+  .route("/pending-fees/:id")
+  .get(protect, getUserPendingFee)
+  .put(protect, updatePendingFees);
 
 module.exports = router;

@@ -9,6 +9,7 @@ const SubscriptionOption = require("../../model/subscriptionOptionModel");
 const SubscriptionType = require("../../model/subscriptionTypeModel");
 const Cardio = require("../../model/cardioModel");
 const User = require("../../model/userModel");
+const PendingFees = require("../../model/pendingFeesModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
 const Price = require("../../model/priceModel");
@@ -125,6 +126,8 @@ const registerUser = asyncHandler(async (req, res) => {
     feesAmount,
     registrationFees,
     adminName,
+    isPending,
+    pendingAmount,
   } = req.body;
 
   // Check if user with same email or phone number exists
@@ -194,9 +197,27 @@ const registerUser = asyncHandler(async (req, res) => {
     admin: adminName,
     amount,
     transaction_type: "New User",
+    pending_amount: pendingAmount || 0,
   };
 
   const createdFeesDetails = await FeesDetails.create(feesDetailsData);
+
+  if (isPending === "yes") {
+    const pendingUser = await PendingFees.findOneAndUpdate(
+      { userId: user.id },
+      { $inc: { pendingAmount: parseInt(pendingAmount) } },
+      { new: true }
+    );
+
+    if (!pendingUser) {
+      await PendingFees.create({
+        userId: user.id,
+        userName: user.name,
+        pendingAmount: parseInt(pendingAmount),
+        paymentStatus: "pending",
+      });
+    }
+  }
 
   if (user) {
     res.status(201).json({
@@ -213,6 +234,7 @@ const registerUser = asyncHandler(async (req, res) => {
       transaction_type: feesDetailsData.transaction_type,
       planEnds: user.planEnds,
       invoice_id: feesDetailsData.invoice_id,
+      pending_amount: pendingAmount || 0,
     });
   } else {
     res.status(400);
@@ -311,6 +333,8 @@ const updateSubscription = asyncHandler(async (req, res) => {
     mode_of_payment,
     paymentDate,
     feesAmount,
+    isPending,
+    pendingAmount,
     adminName,
   } = req.body;
 
@@ -386,6 +410,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     mode_of_payment,
     admin: adminName,
     transaction_type: "Fees Renewal",
+    pending_amount: pendingAmount || 0,
   };
 
   const startOfCurrentDay = new Date();
@@ -404,6 +429,23 @@ const updateSubscription = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
+  if (isPending === "yes") {
+    const pendingUser = await PendingFees.findOneAndUpdate(
+      { userId: updatedUser.id },
+      { $inc: { pendingAmount: parseInt(pendingAmount) } },
+      { new: true }
+    );
+
+    if (!pendingUser) {
+      await PendingFees.create({
+        userId: updatedUser.id,
+        userName: updatedUser.name,
+        pendingAmount: parseInt(pendingAmount),
+        paymentStatus: "pending",
+      });
+    }
+  }
+
   res.json({
     id: updatedUser.id,
     name: updatedUser.name,
@@ -419,6 +461,7 @@ const updateSubscription = asyncHandler(async (req, res) => {
     planEnds: updatedUser.planEnds,
     transaction_type: feesDetailsData.transaction_type,
     feesAmount: updatedUser.feesAmount,
+    pending_amount: pendingAmount || 0,
   });
 });
 
@@ -801,7 +844,6 @@ const addPrice = async (req, res) => {
   }
 };
 
-// Delete a price
 const deletePrice = async (req, res) => {
   try {
     const { id } = req.params;
@@ -922,6 +964,129 @@ UnderDogs Fitness Club
   }
 };
 
+const getUserPendingFee = asyncHandler(async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const pendingAmount = await PendingFees.findOne({ userId: userId })
+      .select("pendingAmount")
+      .lean();
+
+    if (!pendingAmount) {
+      return res.json({ pendingAmount: 0 });
+    }
+
+    res.json({ pendingAmount: pendingAmount.pendingAmount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const getPendingFees = asyncHandler(async (req, res) => {
+  const { page = 1, sort = "newest", status } = req.query;
+  const perPage = 10;
+
+  const sortOption = sort === "oldest" ? "createdAt" : "-createdAt";
+
+  let filter = {};
+
+  if (status === "pending" || status === "paid") {
+    filter.paymentStatus = status;
+  }
+
+  try {
+    const pendingFees = await PendingFees.find(filter)
+      .sort(sortOption)
+      .skip((page - 1) * perPage)
+      .limit(perPage)
+      .lean();
+
+    res.json(pendingFees);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const updatePendingFees = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const { amount, payment_mode, adminName } = req.body;
+
+  try {
+    let user = await User.findOne({ id });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const pendingFee = await PendingFees.findOne({ userId: id });
+
+    if (!pendingFee) {
+      return res.status(404).json({ error: "Pending fees not found" });
+    }
+
+    const { pendingAmount, paymentStatus } = pendingFee;
+
+    if (amount == pendingAmount) {
+      pendingFee.paymentStatus = "paid";
+      pendingFee.pendingAmount = 0;
+
+      await pendingFee.save();
+
+      // Create fees details
+      const feesDetailsData = {
+        user_id: user.id,
+        user_name: user.name,
+        subscription: user.subscription,
+        subscription_type: user.subscription_type,
+        cardio: user.cardio,
+        mode_of_payment: payment_mode,
+        admin: adminName,
+        amount,
+        transaction_type: "Pending fees",
+        pending_amount: 0,
+      };
+
+      const createdFeesDetails = await FeesDetails.create(feesDetailsData);
+
+      return res.status(200).json({
+        message: "Payment completed successfully",
+        pendingAmount: pendingFee.pendingAmount,
+      });
+    } else if (amount < pendingAmount) {
+      pendingFee.pendingAmount -= amount;
+
+      await pendingFee.save();
+
+      // Create fees details
+      const feesDetailsData = {
+        user_id: user.id,
+        user_name: user.name,
+        subscription: user.subscription,
+        subscription_type: user.subscription_type,
+        cardio: user.cardio,
+        mode_of_payment: payment_mode,
+        admin: adminName,
+        amount,
+        transaction_type: "Pending fees",
+        pending_amount: pendingFee.pendingAmount,
+      };
+
+      const createdFeesDetails = await FeesDetails.create(feesDetailsData);
+
+      return res.status(200).json({
+        message: "Partial payment made successfully",
+        pendingAmount: pendingFee.pendingAmount,
+      });
+    } else {
+      return res.status(400).json({ error: "Invalid payment amount" });
+    }
+  } catch (error) {
+    return next(error);
+  }
+});
+
 // Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -960,4 +1125,7 @@ module.exports = {
   addPrice,
   deletePrice,
   sendInvoice,
+  getUserPendingFee,
+  getPendingFees,
+  updatePendingFees,
 };

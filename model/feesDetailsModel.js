@@ -4,7 +4,6 @@ const feesDetailsSchema = mongoose.Schema(
   {
     invoice_id: {
       type: String,
-      required: true,
     },
     user_id: {
       type: Number,
@@ -42,11 +41,15 @@ const feesDetailsSchema = mongoose.Schema(
     },
     transaction_type: {
       type: String,
-      enum: ["New User", "Fees Renewal"],
+      enum: ["New User", "Fees Renewal", "Pending fees"],
       required: true,
     },
     amount: {
       type: Number,
+    },
+    pending_amount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
