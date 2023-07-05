@@ -929,7 +929,7 @@ UnderDogs Fitness Club
       const attachmentType = attachment.mimetype;
 
       const message = {
-        to: "devaags999@gmail.com",
+        to: email,
         from: "underdogsfitnessclub@gmail.com",
         subject: subject,
         text: text,
