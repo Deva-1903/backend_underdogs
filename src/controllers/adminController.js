@@ -543,7 +543,7 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
     let query = {};
     const { date, status, session, page = 1 } = req.query;
-    const limit = 12;
+    const limit = 9;
 
     if (date) {
       const searchDate = moment.utc(date).utcOffset("+05:30").startOf("day");

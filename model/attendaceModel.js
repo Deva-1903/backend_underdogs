@@ -46,6 +46,10 @@ const attendanceSchema = new mongoose.Schema({
     ref: "User",
     type: String,
   },
+  photoURL: {
+    type: String,
+    ref: "User",
+  },
   createdAt: {
     type: Date,
     default: Date.now,

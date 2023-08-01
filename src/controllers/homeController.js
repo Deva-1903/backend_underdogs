@@ -101,6 +101,7 @@ const addAttendance = asyncHandler(async (req, res) => {
       number: attendanceNumber,
       user_id: user.id,
       user_name: user.name,
+      photoURL: user.photoURL,
       timeIn,
       date: currentDate.toDate(),
       session,
