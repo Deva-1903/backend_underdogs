@@ -13,55 +13,68 @@ const {
 } = require("../src/controllers/homeController");
 const User = require("../model/userModel");
 const PendingFees = require("../model/pendingFeesModel");
+const Counter = require("../model/counterModel");
 
 const port = process.env.PORT;
 
 const app = express();
 
-//db connect
+// Database connection
 connectDB();
 
-//middlewares
+// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
+// Routes
 app.get("/", (req, res) => {
   res.status(200).send({ message: "Server is up..." });
 });
 app.use("/api", require("./routes/homeRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
+// Error handler middleware
 app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server listening on ${port}`);
 });
 
-// This function updates the status of users based on their planEnds date
-const updateStatus = async () => {
+// Function to remove pending fees
+const removePendingFees = async () => {
   const currentDate = new Date();
-
   const tenDaysAgo = new Date();
   tenDaysAgo.setDate(currentDate.getDate() - 10);
 
-  const pendingFeesToDelete = await PendingFees.find({
-    paymentStatus: "paid",
-    createdAt: { $lt: tenDaysAgo },
-  });
+  try {
+    const result = await PendingFees.deleteMany({
+      paymentStatus: "paid",
+      createdAt: { $lt: tenDaysAgo },
+    });
 
-  for (const pendingFee of pendingFeesToDelete) {
-    await pendingFee.remove();
+    console.log(`Successfully removed ${result.deletedCount} pending fees.`);
+  } catch (error) {
+    console.error("Error removing pending fees:", error);
   }
+};
+
+// Function to update user status
+const updateUsersStatus = async () => {
+  const currentDate = new Date();
 
   const users = await User.find({ status: "active" });
 
   for (const user of users) {
-    const planEnds = new Date(user.planEnds);
+    try {
+      const planEnds = new Date(user.planEnds);
 
-    if (planEnds < currentDate) {
-      user.status = "inactive";
-      await user.save();
+      if (planEnds < currentDate) {
+        user.status = "inactive";
+        await user.save();
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error);
     }
   }
 };
@@ -70,8 +83,13 @@ const updateStatus = async () => {
 cron.schedule(
   "0 0 * * *",
   async () => {
-    await updateStatus();
-    resetCountersAtMidnight();
+    try {
+      await removePendingFees();
+      await updateUsersStatus();
+      resetCountersAtMidnight();
+    } catch (error) {
+      console.error("Error in cron job:", error);
+    }
   },
   {
     timezone: "Asia/Kolkata",
