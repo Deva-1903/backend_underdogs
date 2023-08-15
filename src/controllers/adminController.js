@@ -542,7 +542,7 @@ const updateUser = asyncHandler(async (req, res) => {
 const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
     let query = {};
-    const { date, status, session, page = 1 } = req.query;
+    const { date, status, session, page = 1, userId } = req.query;
     const limit = 9;
 
     if (date) {
@@ -569,6 +569,10 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
       query.session = session;
     }
 
+    if (userId) {
+      query.user_id = userId;
+    }
+
     const startIndex = (page - 1) * limit;
     const attendances = await Attendance.find(query)
       .sort({ date: -1 })
@@ -585,7 +589,7 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
 const getFeesDetails = asyncHandler(async (req, res) => {
   try {
     let query = {};
-    const { startDate, endDate, admin, page = 1 } = req.query;
+    const { startDate, endDate, admin, page = 1, userId } = req.query;
     const limit = 12;
 
     if (startDate && endDate) {
@@ -606,6 +610,10 @@ const getFeesDetails = asyncHandler(async (req, res) => {
       query.admin = admin;
     }
 
+    if (userId) {
+      query.user_id = userId;
+    }
+
     const startIndex = (page - 1) * limit;
     const feesDetails = await FeesDetails.find(query)
       .limit(limit)
@@ -613,6 +621,54 @@ const getFeesDetails = asyncHandler(async (req, res) => {
       .lean();
 
     res.json(feesDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const getTotalFeesAmount = asyncHandler(async (req, res) => {
+  try {
+    let query = {};
+    const { startDate, endDate, userId } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json({ message: "startDate and endDate are required" });
+    }
+
+    const start = moment
+      .utc(startDate)
+      .utcOffset("+05:30")
+      .startOf("day")
+      .toDate();
+    const end = moment.utc(endDate).utcOffset("+05:30").endOf("day").toDate();
+
+    query.createdAt = {
+      $gte: start,
+      $lte: end,
+    };
+
+    if (userId) {
+      const id = parseInt(userId);
+      query.user_id = id;
+    }
+
+    const feesDetails = await FeesDetails.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalAmountAdded: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const totalAmount =
+      feesDetails.length > 0 ? feesDetails[0].totalAmountAdded : 0;
+
+    res.json({ totalAmount });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -1106,6 +1162,7 @@ module.exports = {
   getAttendancesByDate,
   getContactForms,
   getFeesDetails,
+  getTotalFeesAmount,
   getAllAdminNames,
   getAllAdmins,
   getSubscriptionOptions,
