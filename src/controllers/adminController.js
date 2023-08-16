@@ -545,32 +545,32 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
     const { date, status, session, page = 1, userId } = req.query;
     const limit = 9;
 
-    if (date) {
-      const searchDate = moment.utc(date).utcOffset("+05:30").startOf("day");
-
-      query.date = {
-        $gte: searchDate.toDate(),
-        $lt: searchDate.clone().add(1, "day").toDate(),
-      };
+    if (userId) {
+      query.user_id = userId;
     } else {
-      const currentDate = moment().utcOffset("+05:30").startOf("day");
+      if (date) {
+        const searchDate = moment.utc(date).utcOffset("+05:30").startOf("day");
 
-      query.date = {
-        $gte: currentDate.toDate(),
-        $lt: currentDate.clone().add(1, "day").toDate(),
-      };
-    }
+        query.date = {
+          $gte: searchDate.toDate(),
+          $lt: searchDate.clone().add(1, "day").toDate(),
+        };
+      } else {
+        const currentDate = moment().utcOffset("+05:30").startOf("day");
 
-    if (status === "active" || status === "inactive") {
-      query.status = status;
+        query.date = {
+          $gte: currentDate.toDate(),
+          $lt: currentDate.clone().add(1, "day").toDate(),
+        };
+      }
+
+      if (status === "active" || status === "inactive") {
+        query.status = status;
+      }
     }
 
     if (session === "morning" || session === "evening") {
       query.session = session;
-    }
-
-    if (userId) {
-      query.user_id = userId;
     }
 
     const startIndex = (page - 1) * limit;
