@@ -10,6 +10,7 @@ const {
   getAttendancesByDate,
   getContactForms,
   getFeesDetails,
+  getTotalFeesAmount,
   getAllAdminNames,
   registerAdmin,
   deleteAdmin,
@@ -58,6 +59,8 @@ router.route("/attendance").get(protect, getAttendancesByDate);
 
 // Fees details route
 router.route("/fees-details").get(protect, getFeesDetails);
+
+router.route("/total-fees").get(protect, getTotalFeesAmount);
 
 // Contact forms route
 router.route("/contact-forms").get(protect, getContactForms);
