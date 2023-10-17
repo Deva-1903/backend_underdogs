@@ -265,6 +265,17 @@ const getUserDetails = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  let pendingFees = 0;
+  const pendingAmount = await PendingFees.findOne({ userId: user.id })
+    .select("pendingAmount")
+    .lean();
+
+  if (!pendingAmount) {
+    pendingFees = 0;
+  } else {
+    pendingFees = pendingAmount.pendingAmount;
+  }
+
   res.json({
     id: user.id,
     name: user.name,
@@ -285,6 +296,7 @@ const getUserDetails = asyncHandler(async (req, res) => {
     joiningDate: user.joiningDate,
     planEnds: user.planEnds,
     photoURL: user.photoURL,
+    pendingFees: pendingFees || 0,
     occupation: user.occupation,
   });
 });
@@ -1143,6 +1155,18 @@ const updatePendingFees = asyncHandler(async (req, res, next) => {
   }
 });
 
+const deleteFees = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const deleted = await FeesDetails.findByIdAndDelete(id);
+
+  if (!deleted) {
+    return res.status(404).json({ error: "Fees detail not found." });
+  }
+
+  res.json({ message: "Fees detail deleted successfully." });
+});
+
 // Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -1185,4 +1209,5 @@ module.exports = {
   getUserPendingFee,
   getPendingFees,
   updatePendingFees,
+  deleteFees,
 };

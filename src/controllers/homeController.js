@@ -4,7 +4,7 @@ const User = require("../../model/userModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
 const Counter = require("../../model/counterModel");
-
+const PendingFees = require("../../model/pendingFeesModel");
 const moment = require("moment-timezone");
 
 const getUserDetails = asyncHandler(async (req, res) => {
@@ -30,6 +30,17 @@ const getUserDetails = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  let pendingFees = 0;
+  const pendingAmount = await PendingFees.findOne({ userId: user.id })
+    .select("pendingAmount")
+    .lean();
+
+  if (!pendingAmount) {
+    pendingFees = 0;
+  } else {
+    pendingFees = pendingAmount.pendingAmount;
+  }
+
   res.json({
     id: user.id,
     name: user.name,
@@ -38,6 +49,8 @@ const getUserDetails = asyncHandler(async (req, res) => {
     status: user.status,
     planEnds: user.planEnds,
     cardio: user.cardio,
+    photoURL: user.photoURL,
+    pendingFees: pendingFees || 0,
   });
 });
 
