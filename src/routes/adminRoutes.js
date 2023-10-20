@@ -35,6 +35,7 @@ const {
   getUserPendingFee,
   getPendingFees,
   updatePendingFees,
+  deleteFees,
 } = require("../controllers/adminController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -106,6 +107,8 @@ router.route("/contact-form/:id").delete(protect, deleteContactForm);
 router.route("/prices").get(protect, getAllPrices).post(protect, addPrice);
 
 router.delete("/prices/:id", deletePrice);
+
+router.delete("/fees/:id", deleteFees);
 
 router.route("/send-invoice").post(protect, sendInvoice);
 
