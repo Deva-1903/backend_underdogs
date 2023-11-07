@@ -56,7 +56,7 @@ router.route("/").post(protect, registerAdmin);
 router.route("/:id").delete(protect, deleteAdmin);
 
 // Attendance routes
-router.route("/attendance").get(protect, getAttendancesByDate);
+router.route("/attendance").get(getAttendancesByDate);
 
 // Fees details route
 router.route("/fees-details").get(protect, getFeesDetails);
