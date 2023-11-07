@@ -109,6 +109,10 @@ const addAttendance = asyncHandler(async (req, res) => {
     // Save the updated counter
     await counter.save();
 
+    const pending_amount = await PendingFees.findOne({ userId: user.id })
+      .select("pendingAmount")
+      .lean();
+
     const timeIn = currentDate.format("h:mm:ss a");
     const attendance = new Attendance({
       number: attendanceNumber,
@@ -122,6 +126,7 @@ const addAttendance = asyncHandler(async (req, res) => {
       planEnds: user.planEnds,
       subscription: user.subscription,
       subscription_type: user.subscription_type,
+      pendingAmount: pending_amount.pendingAmount || 0,
     });
 
     const savedAttendance = await attendance.save();
@@ -136,6 +141,7 @@ const addAttendance = asyncHandler(async (req, res) => {
       planEnds: user.planEnds,
       subscription: user.subscription,
       cardio: user.cardio,
+      pendingAmount: pending_amount.pendingAmount || 0,
     });
   } catch (error) {
     console.error(error);
