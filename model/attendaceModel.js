@@ -50,6 +50,10 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     ref: "User",
   },
+  pendingAmount: {
+    type: Number,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
