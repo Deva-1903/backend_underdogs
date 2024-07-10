@@ -1,9 +1,8 @@
 const asyncHandler = require("express-async-handler");
-const Attendance = require("../../model/attendaceModel");
+const Attendance = require("../../model/attendanceModel");
 const User = require("../../model/userModel");
 const ContactForm = require("../../model/contactFormModel");
 const Brochure = require("../../model/brochureModel");
-const Counter = require("../../model/counterModel");
 const PendingFees = require("../../model/pendingFeesModel");
 const moment = require("moment-timezone");
 
@@ -60,6 +59,10 @@ const addAttendance = asyncHandler(async (req, res) => {
   const currentDate = moment().tz("Asia/Kolkata");
   const currentHour = currentDate.hours();
 
+  if (!id || !branch) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
   try {
     const user = await User.findOne({ id, branch });
 
@@ -74,13 +77,10 @@ const addAttendance = asyncHandler(async (req, res) => {
     } else if (currentHour >= 15 && currentHour <= 23) {
       session = "evening";
     } else {
-      session = "morning";
+      return res.status(400).json({
+        message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
+      });
     }
-    // else {
-    //   return res.status(400).json({
-    //     message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
-    //   });
-    // }
 
     const searchDate = moment().tz("Asia/Kolkata").startOf("day");
     const endDate = searchDate.clone().endOf("day");
@@ -98,23 +98,28 @@ const addAttendance = asyncHandler(async (req, res) => {
       });
     }
 
-    let counter = await Counter.findOneAndUpdate(
-      { session, branch },
-      { $inc: { count: 1 } },
-      { upsert: true, new: true }
-    );
+    // Find the latest attendance record for today's date
+    const latestAttendance = await Attendance.findOne({
+      branch,
+      session,
+      date: { $gte: searchDate.toDate(), $lt: endDate.toDate() },
+    }).sort({ number: -1 });
+
+    let number = 1; // Default number for a new attendance
+
+    if (latestAttendance) {
+      number = latestAttendance.number + 1;
+    }
 
     const pendingAmount = await PendingFees.findOne({ userId: user.id, branch })
       .select("pendingAmount")
       .lean();
 
-    const pendingFees = pendingAmount ? pendingAmount.pendingAmount : 0;
-
     const timeIn = currentDate.format("h:mm:ss a");
 
     const attendance = new Attendance({
       branch,
-      number: counter.count,
+      number,
       user_id: user.id,
       user_name: user.name,
       photoURL: user.photoURL,
@@ -125,7 +130,7 @@ const addAttendance = asyncHandler(async (req, res) => {
       planEnds: user.planEnds,
       subscription: user.subscription,
       subscription_type: user.subscription_type,
-      pendingAmount: pendingFees,
+      pendingAmount: pendingAmount ? pendingAmount.pendingAmount : 0,
     });
 
     const savedAttendance = await attendance.save();
@@ -140,7 +145,7 @@ const addAttendance = asyncHandler(async (req, res) => {
       planEnds: user.planEnds,
       subscription: user.subscription,
       cardio: user.cardio,
-      pendingAmount: pendingFees,
+      pendingAmount: pendingAmount ? pendingAmount.pendingAmount : 0,
     });
   } catch (error) {
     console.error(error);

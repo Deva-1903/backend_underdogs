@@ -1,5 +1,5 @@
 const Admin = require("./adminModel");
-const Attendance = require("./attendaceModel");
+const Attendance = require("./attendanceModel");
 const FeesDetails = require("./feesDetailsModel");
 const SubscriptionOption = require("./subscriptionOptionModel");
 const SubscriptionType = require("./subscriptionTypeModel");

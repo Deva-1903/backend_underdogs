@@ -17,10 +17,13 @@ const {
 // Attendace controllers
 const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
-    let branch = req.branch
     let query = {};
-    const { date, status, session, page = 1, userId } = req.query;
+    const { date, status, session, page = 1, userId, branch } = req.query;
     const limit = 9;
+
+    if (!branch) {
+      branch = req.branch
+    }
 
     if (userId) {
       query.user_id = userId;

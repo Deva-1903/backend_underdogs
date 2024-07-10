@@ -5,7 +5,6 @@ const colors = require("colors");
 const dotenv = require("dotenv").config();
 const cron = require("node-cron");
 const { errorHandler } = require("../src/middleware/errorMiddleware");
-const { resetCountersAtMidnight } = require("../src/services/counterReset");
 const { removePendingFees } = require("../src/services/removePendingFees");
 const { updateUsersStatus } = require("../src/services/updateUserStatus");
 
@@ -45,7 +44,6 @@ cron.schedule(
     try {
       await removePendingFees();
       await updateUsersStatus();
-      await resetCountersAtMidnight();
     } catch (error) {
       console.error("Error in cron job:", error);
     }

@@ -19,7 +19,6 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
   subscription: {
     ref: "User",
     type: String,
