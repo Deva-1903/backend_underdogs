@@ -8,7 +8,7 @@ const {
 } = require("../controllers/homeController");
 
 // User routes
-router.route("/users").get(getUserDetails);
+router.route("/users/public").get(getUserDetails);
 
 // Attendance routes
 router.route("/attendance").post(addAttendance);

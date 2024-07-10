@@ -6,6 +6,11 @@ const subscriptionOptionSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  branch: {
+    type: String,
+    enum: ["branch1", "branch2"],
+    required: true,
+  },
 });
 
 const SubscriptionOption = mongoose.model(

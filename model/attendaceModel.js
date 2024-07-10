@@ -54,6 +54,11 @@ const attendanceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  branch: {
+    type: String,
+    enum: ["branch1", "branch2"],
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -27,7 +27,6 @@ const userSchema = mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
     },
     healthIssues: {
       type: String,
@@ -83,42 +82,15 @@ const userSchema = mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    branch: {
+      type: String,
+      enum: ["branch1", "branch2"],
+      required: true,
+  },
   },
   {
     timestamps: true,
   }
 );
-
-// Before saving the user, calculate the subscription end date
-userSchema.pre("save", async function (next) {
-  if (this.isNew) {
-    const subscription = this.subscription;
-    const currentDate = this.joiningDate
-      ? new Date(this.joiningDate)
-      : new Date();
-
-    let duration;
-
-    if (subscription.includes("year")) {
-      duration = parseInt(subscription) * 12;
-    } else if (subscription.includes("month")) {
-      duration = parseInt(subscription);
-    } else {
-      next(new Error("Invalid subscription"));
-    }
-
-    currentDate.setMonth(currentDate.getMonth() + duration);
-
-    this.planEnds = currentDate;
-
-    // Find the user with the highest ID
-    const highestUser = await this.constructor.findOne().sort("-id");
-
-    // Set the new user's ID to be one greater than the highest ID found
-    this.id = highestUser ? highestUser.id + 1 : 1001;
-  }
-
-  next();
-});
 
 module.exports = mongoose.model("User", userSchema);
