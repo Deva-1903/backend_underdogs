@@ -55,7 +55,6 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
 
     query.branch = branch
 
-    console.log(query)
     const startIndex = (page - 1) * limit;
     const attendances = await Attendance.find(query)
       .sort({ date: -1 })

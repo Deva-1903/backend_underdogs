@@ -63,6 +63,11 @@ const addAttendance = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
+  if (typeof id !== 'number') {
+    console.error('Invalid user_id:', id);
+    return res.status(400).send({ message: "Invalid user Id" });
+  }
+
   try {
     const user = await User.findOne({ id, branch });
 
@@ -77,10 +82,9 @@ const addAttendance = asyncHandler(async (req, res) => {
     } else if (currentHour >= 15 && currentHour <= 23) {
       session = "evening";
     } else {
-      session = "morning";
-      // return res.status(400).json({
-      //   message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
-      // });
+      return res.status(400).json({
+        message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
+      });
     }
 
     const searchDate = moment().tz("Asia/Kolkata").startOf("day");
