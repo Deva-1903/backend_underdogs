@@ -18,11 +18,11 @@ const {
 const getAttendancesByDate = asyncHandler(async (req, res) => {
   try {
     let query = {};
-    const { date, status, session, page = 1, userId, branch } = req.query;
-    const limit = 9;
+    let { date, status, session, page = 1, userId, branch } = req.query;
+    let limit = 9;
 
     if (!branch) {
-      branch = req.branch
+      branch = req.headers['x-branch']
     }
 
     if (userId) {
@@ -55,6 +55,7 @@ const getAttendancesByDate = asyncHandler(async (req, res) => {
 
     query.branch = branch
 
+    console.log(query)
     const startIndex = (page - 1) * limit;
     const attendances = await Attendance.find(query)
       .sort({ date: -1 })

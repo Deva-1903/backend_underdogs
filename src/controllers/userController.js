@@ -1,5 +1,6 @@
 const { generateInvoiceID } = require("../services/helpers")
 const asyncHandler = require("express-async-handler");
+const moment = require("moment");
 const {
   Admin,
   Attendance,
@@ -232,8 +233,6 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = 9;
   const query = {};
-
-  console.log(branch)
 
   query.branch = branch
 

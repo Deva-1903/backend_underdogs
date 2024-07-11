@@ -1,10 +1,9 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     id: {
       type: Number,
-      unique: true,
     },
     name: {
       type: String,
@@ -86,11 +85,16 @@ const userSchema = mongoose.Schema(
       type: String,
       enum: ["branch1", "branch2"],
       required: true,
-  },
+    },
   },
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model("User", userSchema);
+// Add a compound index on id and branch fields
+userSchema.index({ id: 1, branch: 1 });
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;

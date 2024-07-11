@@ -9,6 +9,7 @@ exports.removePendingFees = async () => {
   try {
     const result = await PendingFees.deleteMany({
       paymentStatus: "paid",
+      pendingAmount: 0,
       createdAt: { $lt: tenDaysAgo },
     });
 

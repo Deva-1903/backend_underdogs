@@ -30,4 +30,6 @@ const pendingFeesSchema = mongoose.Schema(
   { timestamps: true }
 );
 
+pendingFeesSchema.index({ userId: 1, branch: 1 });
+
 module.exports = mongoose.model("PendingFees", pendingFeesSchema);

@@ -77,9 +77,10 @@ const addAttendance = asyncHandler(async (req, res) => {
     } else if (currentHour >= 15 && currentHour <= 23) {
       session = "evening";
     } else {
-      return res.status(400).json({
-        message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
-      });
+      session = "morning";
+      // return res.status(400).json({
+      //   message: "Attendance can only be added between 4am-1pm and 3pm-11pm",
+      // });
     }
 
     const searchDate = moment().tz("Asia/Kolkata").startOf("day");

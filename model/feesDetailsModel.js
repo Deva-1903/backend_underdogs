@@ -60,6 +60,9 @@ const feesDetailsSchema = mongoose.Schema(
   { timestamps: true }
 );
 
+feesDetailsSchema.index({ user_id: 1, branch: 1 });
+feesDetailsSchema.index({ amount: 1, branch: 1 });
+
 const FeesDetails = mongoose.model("FeesDetails", feesDetailsSchema);
 
 module.exports = FeesDetails;

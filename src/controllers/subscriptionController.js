@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const { generateInvoiceID } = require("../services/helpers")
+const moment = require("moment");
 const {
   Admin,
   Attendance,
@@ -217,6 +218,7 @@ exports.addSubscriptionOption = asyncHandler(async (req, res) => {
       res.status(201).json(newOption);
     })
     .catch((error) => {
+      console.log(error)
       res.status(500).json({ error: "Failed to add subscription option." });
     });
 });

@@ -43,12 +43,10 @@ const registerAdmin = asyncHandler(async (req, res) => {
 });
 
 const loginAdmin = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
-
-  let branchToLogin = req.branch
+  const { username, password, branch } = req.body;
 
   // Find admin by username and ensure they have access to the provided branch
-  const admin = await Admin.findOne({ username, branch: branchToLogin });
+  const admin = await Admin.findOne({ username, branch });
 
   if (!admin) {
     res.status(403);

@@ -65,4 +65,6 @@ const attendanceSchema = new mongoose.Schema({
   },
 });
 
+attendanceSchema.index({ user_id: 1, branch: 1 });
+
 module.exports = mongoose.model("Attendance", attendanceSchema);
