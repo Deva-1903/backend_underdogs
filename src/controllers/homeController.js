@@ -63,7 +63,8 @@ const addAttendance = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  if (typeof id !== 'number') {
+  const isNumeric = /^\d+$/.test(id);
+  if (!isNumeric) {
     console.error('Invalid user_id:', id);
     return res.status(400).send({ message: "Invalid user Id" });
   }
