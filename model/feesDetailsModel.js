@@ -51,9 +51,17 @@ const feesDetailsSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    branch: {
+      type: String,
+      enum: ["branch1", "branch2"],
+      required: true,
+    },
   },
   { timestamps: true }
 );
+
+feesDetailsSchema.index({ user_id: 1, branch: 1 });
+feesDetailsSchema.index({ amount: 1, branch: 1 });
 
 const FeesDetails = mongoose.model("FeesDetails", feesDetailsSchema);
 

@@ -4,7 +4,11 @@ const subscriptionTypeSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
+  },
+  branch: {
+    type: String,
+    enum: ["branch1", "branch2"],
+    required: true,
   },
 });
 

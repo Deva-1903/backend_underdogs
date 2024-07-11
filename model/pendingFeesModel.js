@@ -21,8 +21,15 @@ const pendingFeesSchema = mongoose.Schema(
       enum: ["pending", "paid"],
       default: "pending",
     },
+    branch: {
+      type: String,
+      enum: ["branch1", "branch2"],
+      required: true,
+    },
   },
   { timestamps: true }
 );
+
+pendingFeesSchema.index({ userId: 1, branch: 1 });
 
 module.exports = mongoose.model("PendingFees", pendingFeesSchema);

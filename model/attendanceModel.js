@@ -19,7 +19,6 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
   subscription: {
     ref: "User",
     type: String,
@@ -54,11 +53,18 @@ const attendanceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  branch: {
+    type: String,
+    enum: ["branch1", "branch2"],
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
     expires: "200d",
   },
 });
+
+attendanceSchema.index({ user_id: 1, branch: 1 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

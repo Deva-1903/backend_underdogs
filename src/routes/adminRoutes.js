@@ -1,26 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const {
-  loginAdmin,
-  registerUser,
-  getUserDetails,
-  updateSubscription,
-  updateUser,
-  getAllUsers,
   getAttendancesByDate,
   getContactForms,
-  getFeesDetails,
-  getTotalFeesAmount,
   getAllAdminNames,
-  registerAdmin,
-  deleteAdmin,
   getAllAdmins,
-  getSubscriptionOptions,
-  addSubscriptionOption,
-  deleteSubscriptionOption,
-  getAllSubscriptionTypes,
-  addSubscriptionType,
-  deleteSubscriptionType,
   getAllCardioTypes,
   addCardioType,
   deleteCardioType,
@@ -31,14 +15,36 @@ const {
   getAllPrices,
   addPrice,
   deletePrice,
-  sendInvoice,
-  getUserPendingFee,
   getPendingFees,
   updatePendingFees,
   deleteFees,
 } = require("../controllers/adminController");
 
+const { loginAdmin, registerAdmin, deleteAdmin } = require('../controllers/authController')
+
+const { 
+  registerUser, 
+  getUserDetails, 
+  getAllUsers, 
+  updateUser, 
+  getUserPendingFee,
+  getTotalFeesAmount
+} = require('../controllers/userController')
+
+const { 
+  updateSubscription, 
+  getFeesDetails,   
+  getSubscriptionOptions,
+  addSubscriptionOption,
+  deleteSubscriptionOption,
+  getAllSubscriptionTypes,
+  addSubscriptionType,
+  deleteSubscriptionType
+} = require("../controllers/subscriptionController")
+
 const { protect } = require("../middleware/authMiddleware");
+
+const { sendInvoice } = require("../services/sendEmail")
 
 //Public Route
 router.route("/login").post(loginAdmin);

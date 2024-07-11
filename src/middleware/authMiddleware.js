@@ -18,6 +18,7 @@ const protect = asyncHandler(async (req, res, next) => {
 
       //get admin from the token
       req.admin = await Admin.findById(decoded.id).select("-password");
+      req.branch = req.headers['x-branch']
 
       next();
     } catch (error) {
