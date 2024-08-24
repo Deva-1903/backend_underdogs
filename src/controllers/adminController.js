@@ -471,12 +471,14 @@ const getTeamMembers = asyncHandler(async (req, res) => {
 // Enquiry
 const createEnquiry = asyncHandler(async (req, res) => {
   const { name, contactDetails, enquiryDate, notes } = req.body;
-  const enquiry = await Enquiry.create({ name, contactDetails, enquiryDate, notes });
+  let branch = req.branch
+  const enquiry = await Enquiry.create({ name, contactDetails, enquiryDate, notes, branch });
   res.status(201).json(enquiry);
 });
 
 const getEnquiries = asyncHandler(async (req, res) => {
  try {
+    let branch = req.branch
     const page = parseInt(req.query.page) || 1;
     const limit = 15;
     const skip = (page - 1) * limit;
@@ -494,6 +496,8 @@ const getEnquiries = asyncHandler(async (req, res) => {
     } else if (sort === 'oldest') {
       sortOption = { createdAt: 1 };
     }
+
+    query.branch = branch
 
     const enquiries = await Enquiry.find(query)
       .sort(sortOption)
@@ -516,7 +520,12 @@ const getEnquiries = asyncHandler(async (req, res) => {
 const updateEnquiryStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  const enquiry = await Enquiry.findByIdAndUpdate(id, { status }, { new: true });
+  let branch = req.branch
+  const enquiry = await Enquiry.findOneAndUpdate(
+    {_id: id, branch}, 
+    { status }, 
+    { new: true }
+  );
   if (!enquiry) {
     res.status(404);
     throw new Error('Enquiry not found');

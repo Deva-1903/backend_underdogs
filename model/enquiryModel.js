@@ -19,6 +19,11 @@ const enquirySchema = new mongoose.Schema({
     enum: ['open', 'resolved'],
     default: 'open',
   },
+  branch: {
+    type: String,
+    enum: ["branch1", "branch2"],
+    required: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Enquiry', enquirySchema);
