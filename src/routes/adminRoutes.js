@@ -18,6 +18,7 @@ const {
   getPendingFees,
   updatePendingFees,
   deleteFees,
+  manageTeamMember,
 } = require("../controllers/adminController");
 
 const { loginAdmin, registerAdmin, deleteAdmin } = require('../controllers/authController')
@@ -60,6 +61,9 @@ router.route("/user/subscription").put(protect, updateSubscription);
 // Admin routes
 router.route("/").post(protect, registerAdmin);
 router.route("/:id").delete(protect, deleteAdmin);
+
+// Team Member routes
+router.route("/team-members").post(protect, manageTeamMember);
 
 // Attendance routes
 router.route("/attendance").get(getAttendancesByDate);

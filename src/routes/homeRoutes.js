@@ -6,6 +6,9 @@ const {
   postContactForm,
   getBrochureURL,
 } = require("../controllers/homeController");
+const {
+  getTeamMembers,
+} = require("../controllers/adminController");
 
 // User routes
 router.route("/users/public").get(getUserDetails);
@@ -17,5 +20,7 @@ router.route("/attendance").post(addAttendance);
 router.route("/contact-form").post(postContactForm);
 
 router.route("/brochure").get(getBrochureURL);
+
+router.route("/team-members").get(getTeamMembers);
 
 module.exports = router;

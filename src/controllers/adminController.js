@@ -12,6 +12,7 @@ const {
   ContactForm,
   Brochure,
   Price,
+  TeamMember
 } = require("../../model");
 
 // Attendace controllers
@@ -366,7 +367,101 @@ const deleteCardioType = asyncHandler(async (req, res) => {
 });
 
 
+// @desc    Add a new team member
+// @route   POST /api/admin/team-members
+// @access  Private (Admin only)
+const manageTeamMember = asyncHandler(async (req, res) => {
+  const { method, id, name, role, image, instaUrl, email, yearsOfExperience, specialization, certifications, bio, phoneNumber } = req.body;
+
+  switch (method) {
+    case 'POST':
+      if (!name || !role || !image || !email || !yearsOfExperience) {
+        res.status(400);
+        throw new Error('Please provide all required fields');
+      }
+
+      const newTeamMember = await TeamMember.create({
+        name,
+        role,
+        image,
+        instaUrl,
+        email,
+        yearsOfExperience,
+        specialization,
+        certifications: certifications.split(',').map(cert => cert.trim()),
+        bio,
+        phoneNumber,
+      });
+
+      if (newTeamMember) {
+        res.status(201).json(newTeamMember);
+      } else {
+        res.status(400);
+        throw new Error('Invalid team member data');
+      }
+      break;
+
+    case 'PUT':
+      if (!id) {
+        res.status(400);
+        throw new Error('Please provide team member id');
+      }
+
+      // Remove undefined fields
+      Object.keys(updateFields).forEach(key => updateFields[key] === undefined && delete updateFields[key]);
+
+      // Handle certifications separately if present
+      if (updateFields.certifications) {
+        updateFields.certifications = updateFields.certifications.split(',').map(cert => cert.trim());
+      }
+
+      const updatedTeamMember = await TeamMember.findByIdAndUpdate(
+        id,
+        { $set: updateFields },
+        { new: true }
+      );
+
+      if (updatedTeamMember) {
+        res.json(updatedTeamMember);
+      } else {
+        res.status(404);
+        throw new Error('Team member not found');
+      }
+      break;
+
+    case 'DELETE':
+      if (!id) {
+        res.status(400);
+        throw new Error('Please provide team member id');
+      }
+
+      const deletedTeamMember = await TeamMember.findByIdAndDelete(id);
+
+      if (deletedTeamMember) {
+        res.json({ message: 'Team member deleted successfully' });
+      } else {
+        res.status(404);
+        throw new Error('Team member not found');
+      }
+      break;
+
+    default:
+      res.status(400);
+      throw new Error('Invalid method');
+  }
+});
+
+// @desc    Get all team members
+// @route   GET /api/admin/team-members
+// @access  Private (Admin only)
+const getTeamMembers = asyncHandler(async (req, res) => {
+  const teamMembers = await TeamMember.find({});
+  res.json(teamMembers);
+});
+
 module.exports = {
+  manageTeamMember,
+  getTeamMembers,
   getAttendancesByDate,
   getContactForms,
   getAllAdminNames,

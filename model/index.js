@@ -9,6 +9,7 @@ const PendingFees = require("./pendingFeesModel");
 const ContactForm = require("./contactFormModel");
 const Brochure = require("./brochureModel");
 const Price = require("./priceModel");
+const TeamMember = require('./teamMemberModel');
 
 module.exports = {
   Admin,
@@ -22,4 +23,5 @@ module.exports = {
   ContactForm,
   Brochure,
   Price,
+  TeamMember
 };
