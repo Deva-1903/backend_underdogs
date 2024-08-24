@@ -19,6 +19,9 @@ const {
   updatePendingFees,
   deleteFees,
   manageTeamMember,
+  getEnquiries,
+  createEnquiry,
+  updateEnquiryStatus,
 } = require("../controllers/adminController");
 
 const { loginAdmin, registerAdmin, deleteAdmin } = require('../controllers/authController')
@@ -128,5 +131,12 @@ router
   .route("/pending-fees/:id")
   .get(protect, getUserPendingFee)
   .put(protect, updatePendingFees);
+
+router.route('/enquiries')
+  .get(protect, getEnquiries)
+  .post(protect, createEnquiry);
+
+router.route('/enquiries/:id')
+  .put(protect, updateEnquiryStatus);
 
 module.exports = router;

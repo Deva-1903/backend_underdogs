@@ -12,6 +12,7 @@ const {
   ContactForm,
   Brochure,
   Price,
+  Enquiry,
   TeamMember
 } = require("../../model");
 
@@ -97,19 +98,27 @@ const getAllAdmins = asyncHandler(async (req, res) => {
 
 // Contact Form
 const getContactForms = asyncHandler(async (req, res) => {
-  const perPage = 10;
-  const page = parseInt(req.query.page) || 1;
-  const skip = (page - 1) * perPage;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 15;
+    const skip = (page - 1) * limit;
 
-  const count = await ContactForm.countDocuments({});
-  const totalPages = Math.ceil(count / perPage);
+    const contactForms = await ContactForm.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-  const contactForms = await ContactForm.find({})
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(perPage);
+    const totalContactForms = await ContactForm.countDocuments();
+    const totalPages = Math.ceil(totalContactForms / limit);
 
-  res.json(contactForms);
+    res.json({
+      data: contactForms,
+      currentPage: page,
+      totalPages: totalPages
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching contact forms', error: error.message });
+  }
 });
 
 const deleteContactForm = asyncHandler(async (req, res) => {
@@ -459,7 +468,66 @@ const getTeamMembers = asyncHandler(async (req, res) => {
   res.json(teamMembers);
 });
 
+// Enquiry
+const createEnquiry = asyncHandler(async (req, res) => {
+  const { name, contactDetails, enquiryDate, notes } = req.body;
+  const enquiry = await Enquiry.create({ name, contactDetails, enquiryDate, notes });
+  res.status(201).json(enquiry);
+});
+
+const getEnquiries = asyncHandler(async (req, res) => {
+ try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 15;
+    const skip = (page - 1) * limit;
+    const sort = req.query.sort || 'newest';
+    const status = req.query.status || 'all';
+
+    let query = {};
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    let sortOption = {};
+    if (sort === 'newest') {
+      sortOption = { createdAt: -1 };
+    } else if (sort === 'oldest') {
+      sortOption = { createdAt: 1 };
+    }
+
+    const enquiries = await Enquiry.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+    const totalEnquiries = await Enquiry.countDocuments(query);
+    const totalPages = Math.ceil(totalEnquiries / limit);
+
+    res.json({
+      data: enquiries,
+      currentPage: page,
+      totalPages: totalPages
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching enquiries', error: error.message });
+  }
+});
+
+const updateEnquiryStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const enquiry = await Enquiry.findByIdAndUpdate(id, { status }, { new: true });
+  if (!enquiry) {
+    res.status(404);
+    throw new Error('Enquiry not found');
+  }
+  res.json(enquiry);
+});
+
 module.exports = {
+  createEnquiry,
+  getEnquiries,
+  updateEnquiryStatus,
   manageTeamMember,
   getTeamMembers,
   getAttendancesByDate,

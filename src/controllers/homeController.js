@@ -160,7 +160,7 @@ const addAttendance = asyncHandler(async (req, res) => {
 });
 
 const postContactForm = asyncHandler(async (req, res) => {
-  const { fullName, email, message } = req.body;
+  const { name: fullName, email, message } = req.body;
 
   if (!fullName || !email || !message) {
     res.status(400);
