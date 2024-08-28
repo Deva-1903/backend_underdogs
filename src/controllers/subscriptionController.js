@@ -52,7 +52,7 @@ exports.updateSubscription = asyncHandler(async (req, res) => {
   planEnds.setMonth(currentDate.getMonth() + duration);
 
   const updatedUser = await User.findOneAndUpdate(
-    { _id: id, branch },
+    { id, branch },
     {
       subscription,
       subscription_type,
