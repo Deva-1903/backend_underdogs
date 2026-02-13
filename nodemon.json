@@ -1,0 +1,20 @@
+{
+  "watch": [
+    "src",
+    "model",
+    "config",
+    ".env"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules",
+    "uploads",
+    "*.test.js",
+    "*.spec.js"
+  ],
+  "exec": "node src/server.js",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": "1000"
+}

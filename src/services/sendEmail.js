@@ -1,7 +1,12 @@
 const multer = require("multer");
 const fs = require("fs");
 const sgMail = require("@sendgrid/mail");
+
+// Initialize SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const SENDER_EMAIL = process.env.SENDER_EMAIL || "underdogsfitnessclub@gmail.com";
+
 // Create the multer upload middleware
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -14,18 +19,71 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single("attachment");
 
+/**
+ * Validates email format
+ * @param {string} email - Email address to validate
+ * @returns {object} - { valid: boolean, email: string, error: string }
+ */
+const validateEmail = (email) => {
+  if (!email || typeof email !== "string") {
+    return { valid: false, error: "Email is required" };
+  }
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const trimmedEmail = email.trim().toLowerCase();
+
+  if (!emailRegex.test(trimmedEmail)) {
+    return { valid: false, error: "Invalid email format" };
+  }
+
+  return { valid: true, email: trimmedEmail };
+};
+
+/**
+ * Sends invoice email with PDF attachment using SendGrid
+ */
 exports.sendInvoice = async (req, res) => {
   try {
     upload(req, res, async (err) => {
       if (err) {
         console.error("Error uploading file:", err);
-        res.status(500).json({ message: "Failed to upload file." });
-        return;
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload file.",
+          error: err.message,
+        });
       }
 
       const { email, action, invoice_id, user_name } = req.body;
       const attachment = req.file;
 
+      // Validate email
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: emailValidation.error,
+        });
+      }
+
+      // Validate attachment
+      if (!attachment) {
+        return res.status(400).json({
+          success: false,
+          message: "No invoice PDF attached",
+        });
+      }
+
+      // Check SendGrid configuration
+      if (!process.env.SENDGRID_API_KEY) {
+        console.error("SendGrid API key not configured");
+        return res.status(500).json({
+          success: false,
+          message: "Email service not configured. Contact support.",
+        });
+      }
+
+      // Generate subject and text based on action
       let subject = "";
       let text = "";
 
@@ -42,7 +100,8 @@ Website: https://www.underdogsfitness.in/
 Contact/WhatsApp: +91 91235 25358 / +91 63822 32050
 
 Best regards,
-UnderDogs Fitness Club      `;
+UnderDogs Fitness Club
+        `;
       } else if (action === "updateSubscription") {
         subject = `UnderDogs Fitness Club Subscription Update - Invoice ${invoice_id}`;
         text = `
@@ -63,7 +122,7 @@ UnderDogs Fitness Club
         text = `
 Dear ${user_name},
 
-We hope this email finds you well. Please find attached the invoice for your recent transaction/action. If you require any clarification or have any concerns, don't hesitate to reach out to us. We appreciate your continued support.
+We hope this email finds you well. Please find attached the invoice for your recent transaction. If you require any clarification or have any concerns, don't hesitate to reach out to us. We appreciate your continued support.
 
 Website: https://www.underdogsfitness.in/
 Contact/WhatsApp: +91 91235 25358 / +91 63822 32050
@@ -73,37 +132,37 @@ UnderDogs Fitness Club
         `;
       }
 
-      const attachmentData = await new Promise((resolve, reject) => {
-        fs.readFile(attachment.path, (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        });
-      });
-
-      const attachmentName = attachment.originalname;
-      const attachmentType = attachment.mimetype;
-
-      const message = {
-        to: email,
-        from: "underdogsfitnessclub@gmail.com",
-        subject: subject,
-        text: text,
-        attachments: [
-          {
-            content: attachmentData.toString("base64"),
-            filename: attachmentName,
-            type: attachmentType,
-            disposition: "attachment",
-          },
-        ],
-      };
-
       try {
-        await sgMail.send(message);
-        res.json({ message: "Invoice sent successfully!" });
+        // Read the attachment file
+        const attachmentData = fs.readFileSync(attachment.path);
+
+        // Prepare email message
+        const message = {
+          to: emailValidation.email,
+          from: SENDER_EMAIL,
+          subject: subject,
+          text: text,
+          attachments: [
+            {
+              content: attachmentData.toString("base64"),
+              filename: attachment.originalname,
+              type: attachment.mimetype,
+              disposition: "attachment",
+            },
+          ],
+        };
+
+        // Send email via SendGrid
+        const result = await sgMail.send(message);
+
+        console.log(`✓ Invoice ${invoice_id} sent to ${emailValidation.email}`);
+
+        res.json({
+          success: true,
+          message: "Invoice sent successfully!",
+          emailSent: emailValidation.email,
+          invoiceId: invoice_id,
+        });
 
         // Delete the file from the uploads folder
         fs.unlink(attachment.path, (err) => {
@@ -112,12 +171,45 @@ UnderDogs Fitness Club
           }
         });
       } catch (error) {
-        console.error("Error sending invoice:", error);
-        res.status(500).json({ message: "Failed to send invoice." });
+        console.error("SendGrid Error:", {
+          invoice_id,
+          email: emailValidation.email,
+          code: error.code,
+          message: error.message,
+          response: error.response?.body,
+        });
+
+        // Provide specific error messages
+        let userMessage = "Failed to send invoice.";
+
+        if (error.code === 401 || error.code === 403) {
+          userMessage = "Email service authentication failed. Please check API key.";
+        } else if (error.code === 400) {
+          userMessage = "Invalid email address or rejected by email server.";
+        } else if (error.response?.body?.errors) {
+          userMessage = error.response.body.errors[0]?.message || userMessage;
+        }
+
+        // Delete the file even if sending failed
+        fs.unlink(attachment.path, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting file after failed send:", unlinkErr);
+          }
+        });
+
+        res.status(500).json({
+          success: false,
+          message: userMessage,
+          technicalDetails:
+            process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
       }
     });
   } catch (error) {
-    console.error('Error importing "formidable":', error);
-    res.status(500).json({ message: "Failed to process the form data." });
+    console.error("Error in sendInvoice handler:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process the invoice request.",
+    });
   }
 };

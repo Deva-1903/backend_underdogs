@@ -1,4 +1,4 @@
-const { generateInvoiceID } = require("../services/helpers")
+const { generateInvoiceID } = require("../services/helpers");
 const asyncHandler = require("express-async-handler");
 const moment = require("moment");
 const {
@@ -42,12 +42,12 @@ exports.registerUser = asyncHandler(async (req, res) => {
     pendingAmount,
   } = req.body;
 
-  let branch = req.branch
+  let branch = req.branch;
 
   // Check if user with the same email or phone number exists in the branch
   const userExists = await User.findOne({
     $or: [{ email }, { mobile }],
-    branch: branch
+    branch: branch,
   });
 
   if (userExists) {
@@ -71,7 +71,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
   const planEnds = currentDate;
 
   // Find the user with the highest ID and set the new user's ID to be one greater
-  const highestUser = await User.findOne({ branch }).sort({ id: -1});
+  const highestUser = await User.findOne({ branch }).sort({ id: -1 });
   const newUserId = highestUser ? highestUser.id + 1 : 1001;
 
   // Create user
@@ -98,7 +98,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
     registrationFees,
     photoURL,
     planEnds,
-    branch
+    branch,
   });
 
   // Calculate total amount
@@ -130,7 +130,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
     const pendingUser = await PendingFees.findOneAndUpdate(
       { userId: user.id, branch },
       { $inc: { pendingAmount: parseInt(pendingAmount) } },
-      { new: true }
+      { new: true },
     );
 
     if (!pendingUser) {
@@ -139,7 +139,7 @@ exports.registerUser = asyncHandler(async (req, res) => {
         userName: user.name,
         pendingAmount: parseInt(pendingAmount),
         paymentStatus: "pending",
-        branch
+        branch,
       });
     }
   }
@@ -171,7 +171,7 @@ exports.getUserDetails = asyncHandler(async (req, res) => {
   const id = req.query.id;
   const email = req.query.email;
   const mobile = req.query.mobile;
-  const branch = req.branch
+  const branch = req.branch;
 
   let user;
 
@@ -229,12 +229,12 @@ exports.getUserDetails = asyncHandler(async (req, res) => {
 
 exports.getAllUsers = asyncHandler(async (req, res) => {
   const { status, sort } = req.query;
-  let branch = req.branch
+  let branch = req.branch;
   const page = parseInt(req.query.page) || 1;
   const pageSize = 9;
   const query = {};
 
-  query.branch = branch
+  query.branch = branch;
 
   if (status === "active" || status === "inactive") {
     query.status = status;
@@ -283,7 +283,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
     photoURL,
     occupation,
   } = req.body;
-  let branch = req.branch
+  let branch = req.branch;
   // Find the user to update
   let user = await User.findOne({ id, branch });
 
@@ -313,7 +313,9 @@ exports.updateUser = asyncHandler(async (req, res) => {
   if (occupation) updatedUser.occupation = occupation;
 
   // Save the updated user object to the database
-  user = await User.findOneAndUpdate({ id, branch }, updatedUser, { new: true });
+  user = await User.findOneAndUpdate({ id, branch }, updatedUser, {
+    new: true,
+  });
 
   // Send the updated user object in the response
   res.json({
@@ -340,7 +342,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
 
 exports.getUserPendingFee = asyncHandler(async (req, res) => {
   const userId = req.params.id;
-  const branch = req.branch
+  const branch = req.branch;
 
   try {
     const pendingAmount = await PendingFees.findOne({ userId: userId, branch })
@@ -362,7 +364,7 @@ exports.getTotalFeesAmount = asyncHandler(async (req, res) => {
   try {
     let query = {};
     const { startDate, endDate, userId } = req.query;
-    const branch = req.branch
+    const branch = req.branch;
 
     if (!startDate || !endDate) {
       return res
@@ -387,7 +389,7 @@ exports.getTotalFeesAmount = asyncHandler(async (req, res) => {
       query.user_id = id;
     }
 
-    query.branch = branch
+    query.branch = branch;
 
     const feesDetails = await FeesDetails.aggregate([
       { $match: query },

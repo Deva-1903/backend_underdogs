@@ -18,13 +18,36 @@ const protect = asyncHandler(async (req, res, next) => {
 
       //get admin from the token
       req.admin = await Admin.findById(decoded.id).select("-password");
-      req.branch = req.headers['x-branch']
+      
+      if (!req.admin) {
+        res.status(401);
+        throw new Error("Admin not found");
+      }
+
+      // Get branch from header
+      const requestedBranch = req.headers['x-branch'];
+      
+      // Always use admin's branch to ensure they can only access their own branch data
+      // If a branch is requested in header, verify it matches admin's branch
+      if (requestedBranch && req.admin.branch !== requestedBranch) {
+        const error = new Error("Access denied: You do not have permission to access this branch");
+        error.statusCode = 403;
+        res.status(403);
+        throw error;
+      }
+
+      // Set branch to admin's branch (ensures admin can only access their own branch)
+      req.branch = req.admin.branch;
 
       next();
     } catch (error) {
       console.log(error);
-      res.status(401);
-      throw new Error("Not authorized");
+      // Preserve status code if it was already set (e.g., 403 for branch access)
+      // Otherwise default to 401
+      if (!res.statusCode || res.statusCode === 200) {
+        res.status(error.statusCode || 401);
+      }
+      throw error;
     }
   }
 
